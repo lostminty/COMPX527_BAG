@@ -7,8 +7,7 @@ Training on:
 
 Note:
 for downloading the Dataset, the zip comes with a duplicate of the dataset.
-also,
-to process correctly, move the Labels folder out of the main dataset directory (note where this is for using the csv helper script)
+
 
 Based on:
 - https://github.com/PyTorchLightning/pytorch-lightning
