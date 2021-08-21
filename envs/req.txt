@@ -16,9 +16,9 @@ blas=1.0=mkl
 boto3=1.18.25=pypi_0
 botocore=1.21.25=pypi_0
 bzip2=1.0.8=h7b6447c_0
-ca-certificates=2021.7.5=h06a4308_1
+ca-certificates=2021.5.30=ha878542_0
 cachetools=4.2.2=pypi_0
-certifi=2021.5.30=py38h06a4308_0
+certifi=2021.5.30=py38h578d9bd_0
 chardet=4.0.0=pypi_0
 charset-normalizer=2.0.4=pypi_0
 cudatoolkit=10.1.243=h6bb024c_0
@@ -58,7 +58,7 @@ ipython_genutils=0.2.0=pyhd3eb1b0_1
 jedi=0.18.0=py38h06a4308_1
 jinja2=3.0.1=pypi_0
 jmespath=0.10.0=pypi_0
-joblib=1.0.1=pypi_0
+joblib=1.0.1=pyhd8ed1ab_0
 jpeg=9b=h024ee3a_2
 jupyter_client=6.1.12=pyhd3eb1b0_0
 jupyter_core=4.7.1=py38h06a4308_0
@@ -68,11 +68,16 @@ kornia=0.5.8=pypi_0
 lame=3.100=h7b6447c_0
 lcms2=2.12=h3be6417_0
 ld_impl_linux-64=2.35.1=h7274673_9
+libblas=3.9.0=11_linux64_mkl
+libcblas=3.9.0=11_linux64_mkl
 libffi=3.3=he6710b0_2
 libgcc-ng=9.3.0=h5101ec6_17
+libgfortran-ng=11.1.0=h69a702a_8
+libgfortran5=11.1.0=h6c583b3_8
 libgomp=9.3.0=h5101ec6_17
 libiconv=1.15=h63c8f33_5
 libidn2=2.3.2=h7f8727e_0
+liblapack=3.9.0=11_linux64_mkl
 libpng=1.6.37=hbc83047_0
 libsodium=1.0.18=h7b6447c_0
 libstdcxx-ng=9.3.0=hd4cf53a_17
@@ -108,7 +113,7 @@ opencv-python=4.5.3.56=pypi_0
 opencv-python-headless=4.4.0.46=pypi_0
 openh264=2.1.0=hd408876_0
 openjpeg=2.3.0=h05c96fa_1
-openssl=1.1.1k=h27cfd23_0
+openssl=1.1.1k=h7f98852_0
 packaging=21.0=pypi_0
 pandas=1.2.5=pypi_0
 parameterized=0.8.1=pypi_0
@@ -133,6 +138,7 @@ pymongo=3.12.0=pypi_0
 pyparsing=2.4.7=pypi_0
 python=3.8.11=h12debd9_0_cpython
 python-dateutil=2.8.2=pyhd3eb1b0_0
+python_abi=3.8=2_cp38
 pytorch=1.8.1=py3.8_cuda10.1_cudnn7.6.3_0
 pytorch-lightning=1.4.2=pypi_0
 pytorchvideo=0.1.2=pypi_0
@@ -149,7 +155,7 @@ rfc3986=1.5.0=pypi_0
 rsa=4.7.2=pypi_0
 s3transfer=0.5.0=pypi_0
 scikit-image=0.18.2=pypi_0
-scikit-learn=0.24.2=pypi_0
+scikit-learn=0.24.2=py38hdc147b9_0
 scipy=1.7.1=pypi_0
 setuptools=52.0.0=py38h06a4308_0
 six=1.16.0=pyhd3eb1b0_0
@@ -161,7 +167,7 @@ tensorboard=2.6.0=pypi_0
 tensorboard-data-server=0.6.1=pypi_0
 tensorboard-plugin-wit=1.8.0=pypi_0
 termcolor=1.1.0=pypi_0
-threadpoolctl=2.2.0=pypi_0
+threadpoolctl=2.2.0=pyh8a188c0_0
 tifffile=2021.8.8=pypi_0
 tk=8.6.10=hbc83047_0
 torchaudio=0.8.1=py38

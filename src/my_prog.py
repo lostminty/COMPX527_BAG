@@ -1,10 +1,8 @@
 CHECKPOINT_FILE = "example.ckpt"
 SEED = 1
 NUM_WORKERS = 8
-import torch
-import torchvision
-import datasets
-import transforms as tf
+import torch,torchvision 
+import datasets,transforms as tf
 import csv, os, glob, re, sys
 from torch import nn
 import torch.nn.functional as F
@@ -13,8 +11,8 @@ from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 import pytorch_lightning as pl
 from torch.optim import Adam
-
-
+import numpy as np
+from sklearn.metrics import accuracy_score
 
 
 class DCSASS(VisionDataset):
@@ -86,6 +84,26 @@ class LitAutoEncoder(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
+        
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = F.cross_entropy(y_hat, y)
+        self.log('val_loss', loss, prog_bar=False)
+        y_true = y.cpu().detach().numpy()
+        y_pred = y_hat.argmax(axis=1).cpu().detach().numpy()
+        return {'loss': loss,
+                'y_true': y_true,
+                'y_pred': y_pred}
+                
+    def validation_epoch_end(self, outputs):
+        y_true = np.array([])
+        y_pred = np.array([])
+        for results_dict in outputs:
+            y_true = np.append(y_true, results_dict['y_true'])
+            y_pred = np.append(y_pred, results_dict['y_pred'])
+        acc = accuracy_score(y_true, y_pred)
+        self.log('val_acc', acc)
 
 
 if __name__ == "__main__":
