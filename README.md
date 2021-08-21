@@ -9,3 +9,17 @@ Note:
 for downloading the Dataset, the zip comes with a duplicate of the dataset.
 also,
 to process correctly, move the Labels folder out of the main dataset directory (note where this is for using the csv helper script)
+
+Based on:
+https://github.com/PyTorchLightning/pytorch-lightning
+
+most of what is in the my_prog.py is from the README.md
+modifications are:
+using the datasets.py helper methods for making the dataset objects
+adjusting the Tensor parameters
+adjusting the resizing
+added Grayscale transform
+Added in gpus=1 parameter to trainer
+
+TODO:
+for the DataLoader, one can set the num_workers parameter but it's currently left at default (None) which might be a way to improve efficient utilising of system resources.
