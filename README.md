@@ -39,6 +39,19 @@ Been running it in an anaconda env
 https://www.anaconda.com/products/individual
 
 after installing, reload command prompt/bash (windows has a shortcut installed in the start menu for anaconda)
+
+in [my_prog.py](my_prog.py) are two vars:
+- SEED = 1
+- NUM_WORKERS = 8 (set to your number of CPU cores)
+
+if you have multiple GPUs, edit the following line param gpu=x
+
+[line to edit](my_prog.py#L120)
+```python
+trainer = pl.Trainer(gpus=1)
+```
+
+
 ```sh
 conda create --name video
 conda activate video
