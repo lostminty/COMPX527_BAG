@@ -32,7 +32,7 @@ for the DataLoader, one can set the num_workers parameter but it's currently lef
 
 Some dependencies
 
-- pytorch https://pytorch.org/
+- pytorch https://pytorch.org/ (will give you a conda command to run if you select appropriate for you system)
 - pytorch lightning https://github.com/PyTorchLightning/pytorch-lightning
 - CUDA toolkit https://developer.nvidia.com/cuda-downloads
 
