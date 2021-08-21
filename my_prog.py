@@ -102,7 +102,7 @@ if __name__ == "__main__":
         ])
     )
     file_count = len(dataset)
-    lengths = [int(file_count) *0.8),int(file_count * 0.2)]
+    lengths = [int(file_count *0.8),int(file_count * 0.2)]
     train,val = torch.utils.data.random_split(dataset, lengths)
     
     train_data_loader = torch.utils.data.DataLoader(train, batch_size = 2, shuffle = True)
