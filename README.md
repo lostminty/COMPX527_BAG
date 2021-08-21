@@ -5,7 +5,7 @@ COMPX527-21B A2:AWS CC App Service to detect suspicious behaviour on submitted C
 Training on:
 - https://www.kaggle.com/mateohervas/dcsass-dataset (requires sign in)
 
-Note:
+No  te:
 for downloading the Dataset, the zip comes with a duplicate of the dataset.
 
 
@@ -39,6 +39,19 @@ Been running it in an anaconda env
 https://www.anaconda.com/products/individual
 
 after installing, reload command prompt/bash (windows has a shortcut installed in the start menu for anaconda)
+
+in [my_prog.py](my_prog.py) are two vars:
+- SEED = 1
+- NUM_WORKERS = 8 (set to your number of CPU cores)
+
+if you have multiple GPUs, edit the following line param gpu=x
+
+[line to edit](my_prog.py#L120)
+```python
+trainer = pl.Trainer(gpus=1)
+```
+
+
 ```sh
 conda create --name video
 conda activate video
@@ -52,3 +65,30 @@ conda install -c anaconda cudatoolkit
 ```sh
 python my_prog.py /path/to/dcsass/videos/
 ```
+
+
+
+## Notes ##
+
+### Transforms ###
+- VideoToTensor(frames_in_tensor=20,fps=2)
+- Grayscale
+- Resize(128,128)
+  
+### Encoder ###
+- Linear(in=video.x*video.y*frames_in_tensor,out=64)
+- ReLU
+- Linear(out=64, num_of_classes)
+
+### Decoder ###
+- Linear(in=num_of_classes,out=64)
+- ReLU
+- Linear(in=64,out=video.x*video.y*frames_in_tensor)
+
+
+## TODO ##
+- Training Step description
+- Optimizer description
+- Validation Step implementation
+- Other? evaluation/testing step?
+
