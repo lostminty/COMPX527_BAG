@@ -65,8 +65,8 @@ class LitAutoEncoder(pl.LightningModule):
     def __init__(self):
         super().__init__()
         # first and last layer have the same size as generated Tensor
-        self.encoder = nn.Sequential(nn.Linear(128 * 128 * 10, 256), nn.ReLU(), nn.Linear(256, 8))
-        self.decoder = nn.Sequential(nn.Linear(8, 256), nn.ReLU(), nn.Linear(256, 128 * 128 * 10))
+        self.encoder = nn.Sequential(nn.Linear(128 * 128 * 20, 64), nn.ReLU(), nn.Linear(64, 13))
+        self.decoder = nn.Sequential(nn.Linear(13, 64), nn.ReLU(), nn.Linear(64, 128 * 128 * 20))
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     dataset = DCSASS(
         sys.argv[1],
         transform=torchvision.transforms.Compose([
-            tf.VideoFilePathToTensor(max_len=10, fps=2, padding_mode='last'),
+            tf.VideoFilePathToTensor(max_len=20, fps=2, padding_mode='last'),
             tf.VideoGrayscale(),
             tf.VideoResize([128, 128]),
         ])
@@ -113,8 +113,8 @@ if __name__ == "__main__":
     
     train,val = torch.utils.data.random_split(dataset, lengths)
     
-    train_data_loader = torch.utils.data.DataLoader(train, batch_size = 2, shuffle = True,num_workers=NUM_WORKERS)
-    val_data_loader = torch.utils.data.DataLoader(val, batch_size = 2, shuffle = True,num_workers=NUM_WORKERS)
+    train_data_loader = torch.utils.data.DataLoader(train, batch_size = 1, shuffle = True,num_workers=NUM_WORKERS)
+    val_data_loader = torch.utils.data.DataLoader(val, batch_size = 1, shuffle = True,num_workers=NUM_WORKERS)
 
     autoencoder = LitAutoEncoder()
     trainer = pl.Trainer(gpus=1)

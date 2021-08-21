@@ -1,5 +1,5 @@
 [build-system]
 requires = [
-	"pytorch","torchvision","cudatoolkit", "pytorch-lightning"
+	"pytorch","torchvision", "pytorch-lightning"
 ]
 build-backend = "setuptools.build_meta"
