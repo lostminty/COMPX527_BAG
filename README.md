@@ -12,6 +12,9 @@ to process correctly, move the Labels folder out of the main dataset directory (
 
 Based on:
 https://github.com/PyTorchLightning/pytorch-lightning
+(pytorch helper module, automates a lot of 'boilerplate code'. Has some capacity to make code more portable: TODO!)
+https://github.com/YuxinZhaozyx/pytorch-VideoDataset 
+(videodataset helper module, just uses the dataset.py and transforms.py. Expects them to be in the same dir)
 
 most of what is in the my_prog.py is from the README.md
 modifications are:
