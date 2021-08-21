@@ -44,13 +44,15 @@ in [my_prog.py](my_prog.py) are two vars:
 - SEED = 1
 - NUM_WORKERS = 8 (set to your number of CPU cores)
 
-if you have multiple GPUs, edit the following line param gpu=x
+if you have multiple GPUs, edit the following line param gpus=x
 
 [line to edit](my_prog.py#L120)
 ```python
 trainer = pl.Trainer(gpus=1)
 ```
 
+
+### Setup Instructions - FIX ###
 
 ```sh
 conda create --name video
