@@ -1,5 +1,6 @@
 CHECKPOINT_FILE = "example.ckpt"
 SEED = 1
+NUM_WORKERS = 8
 import torch
 import torchvision
 import datasets
@@ -93,6 +94,7 @@ if __name__ == "__main__":
         sys.exit(1)
         
     torch.manual_seed(SEED)
+    
     dataset = DCSASS(
         sys.argv[1],
         transform=torchvision.transforms.Compose([
@@ -103,10 +105,16 @@ if __name__ == "__main__":
     )
     file_count = len(dataset)
     lengths = [int(file_count *0.8),int(file_count * 0.2)]
+    
+    diff = file_count - sum(lengths)
+    
+    if diff != 0:
+    	lengths[1]=lengths[1]+diff
+    
     train,val = torch.utils.data.random_split(dataset, lengths)
     
-    train_data_loader = torch.utils.data.DataLoader(train, batch_size = 2, shuffle = True)
-    val_data_loader = torch.utils.data.DataLoader(val, batch_size = 2, shuffle = True)
+    train_data_loader = torch.utils.data.DataLoader(train, batch_size = 2, shuffle = True,num_workers=NUM_WORKERS)
+    val_data_loader = torch.utils.data.DataLoader(val, batch_size = 2, shuffle = True,num_workers=NUM_WORKERS)
 
     autoencoder = LitAutoEncoder()
     trainer = pl.Trainer(gpus=1)
