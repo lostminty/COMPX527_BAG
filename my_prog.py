@@ -1,5 +1,5 @@
 CHECKPOINT_FILE = "example.ckpt"
-
+SEED = 1
 import torch
 import torchvision
 import datasets
@@ -12,6 +12,8 @@ from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 import pytorch_lightning as pl
 from torch.optim import Adam
+
+
 
 
 class DCSASS(VisionDataset):
@@ -89,7 +91,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(sys.argv[0], "<path to \"DCSASS Dataset\" ZIP extraction>")
         sys.exit(1)
-
+        
+    torch.manual_seed(SEED)
     dataset = DCSASS(
         sys.argv[1],
         transform=torchvision.transforms.Compose([
@@ -98,10 +101,15 @@ if __name__ == "__main__":
             tf.VideoResize([128, 128]),
         ])
     )
-    data_loader = DataLoader(dataset, batch_size = 2, shuffle = True)
+    file_count = len(dataset)
+    lengths = [int(file_count) *0.8),int(file_count * 0.2)]
+    train,val = torch.utils.data.random_split(dataset, lengths)
+    
+    train_data_loader = torch.utils.data.DataLoader(train, batch_size = 2, shuffle = True)
+    val_data_loader = torch.utils.data.DataLoader(val, batch_size = 2, shuffle = True)
 
     autoencoder = LitAutoEncoder()
     trainer = pl.Trainer(gpus=1)
 
-    trainer.fit(autoencoder,data_loader)
+    trainer.fit(autoencoder,train_dataloaders=train_data_loader,val_dataloaders=val_data_loader)
     trainer.save_checkpoint(CHECKPOINT_FILE)
