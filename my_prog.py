@@ -2,24 +2,58 @@ import torch
 import torchvision
 import datasets
 import transforms as tf
-import csv,os,glob
+import csv, os, glob, re, sys
 from torch import nn
 import torch.nn.functional as F
-from torchvision.datasets import vision
+from torchvision.datasets import vision, VisionDataset
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 import pytorch_lightning as pl
 from torch.optim import Adam
 
 
-dataset = datasets.VideoLabelDataset(
-    "output.csv",
-    transform=torchvision.transforms.Compose([
-        tf.VideoFilePathToTensor(max_len=10, fps=2, padding_mode='last'),tf.VideoGrayscale(),
-        tf.VideoResize([128, 128]),
-    ])
-)
-data_loader = torch.utils.data.DataLoader(dataset, batch_size = 2, shuffle = True)
+class DCSASS(VisionDataset):
+    def __init__(self, directory, transform=None):
+        super().__init__(directory)
+
+        self.directory = directory
+        self.transform = transform
+        self.video_files = []
+        self.labels = []
+        self.positives = []
+
+        regex = re.compile(r".*_x264")
+        for file in glob.glob(directory + "/Labels/*.csv"):
+            for row in csv.reader(open(file)):
+                if not row:
+                    continue
+
+                file_base = regex.match(row[0])
+                file_base = file_base.group(0) if file_base else None
+                if not file_base:
+                    continue
+
+                if file_base[0:4] == "oadA":  # Correct a bad file path.
+                    file_base = "R" + file_base
+                    row[0] = "R" + row[0]
+
+                file_path = f"{directory}/{row[1]}/{file_base}.mp4/{row[0]}.mp4"
+                if not os.path.exists(file_path):
+                    continue
+
+                self.video_files.append(file_path)
+                self.labels.append(row[1])
+                self.positives.append(bool(int(row[2])) if row[2] else False)
+
+    def __len__(self):
+        return len(self.video_files)
+
+    def __getitem__(self, index):
+        video = self.video_files[index]
+        label = self.labels[index]
+        if self.transform:
+            video = self.transform(video)
+        return video, label
 
 
 class LitAutoEncoder(pl.LightningModule):
@@ -47,8 +81,24 @@ class LitAutoEncoder(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
-    
-autoencoder = LitAutoEncoder()
-trainer = pl.Trainer(gpus=1)
 
-trainer.fit(autoencoder,data_loader)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print(sys.argv[0], "<path to \"DCSASS Dataset\" ZIP extraction>")
+        sys.exit(1)
+
+    dataset = DCSASS(
+        sys.argv[1],
+        transform=torchvision.transforms.Compose([
+            tf.VideoFilePathToTensor(max_len=10, fps=2, padding_mode='last'),
+            tf.VideoGrayscale(),
+            tf.VideoResize([128, 128]),
+        ])
+    )
+    data_loader = DataLoader(dataset, batch_size = 2, shuffle = True)
+
+    autoencoder = LitAutoEncoder()
+    trainer = pl.Trainer(gpus=1)
+
+    trainer.fit(autoencoder,data_loader)
