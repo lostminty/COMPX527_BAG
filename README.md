@@ -3,7 +3,7 @@ COMPX527-21B A2:AWS CC App Service to detect suspicious behaviour on submitted C
 
 
 Training on:
-- https://www.kaggle.com/mateohervas/dcsass-dataset
+- https://www.kaggle.com/mateohervas/dcsass-dataset (requires sign in)
 
 Note:
 for downloading the Dataset, the zip comes with a duplicate of the dataset.
