@@ -17,7 +17,7 @@ for file_path in file_paths_label_csv:
 
         mydict.update({rows[0]:rows[1] for rows in reader})
         
-output={path:(mydict[os.path.basename(path)[:-4]] if os.path.basename(path)[:-4] in mydict else "No Activity") for path in file_paths}
+output={path:(mydict[os.path.basename(path)[:-4]] if os.path.basename(path)[:-4] in mydict else "Unknown") for path in file_paths}
 with open('./__labels.csv', 'w') as f:
     f.write("%s,%s\n"%("path","label"))
     for key in output.keys():

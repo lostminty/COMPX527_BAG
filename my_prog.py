@@ -1,3 +1,5 @@
+CHECKPOINT_FILE = "example.ckpt"
+
 import torch
 import torchvision
 import datasets
@@ -102,3 +104,4 @@ if __name__ == "__main__":
     trainer = pl.Trainer(gpus=1)
 
     trainer.fit(autoencoder,data_loader)
+    trainer.save_checkpoint(CHECKPOINT_FILE)
