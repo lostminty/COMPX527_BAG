@@ -48,12 +48,8 @@ conda install -c conda-forge pytorch-lightning
 conda install -c anaconda cudatoolkit
 ```
 
-edit the vars in CAPS of [label_csv_helper.py](label_csv_helper.py) to point to your dataset, labels and CSV output (for use in [pytorch-VideoDataset](https://github.com/YuxinZhaozyx/pytorch-VideoDataset) class)
-```sh
-python label_csv_helper.py
-```
-edit my_prog.py to know where you put the CSV output from the previous step
+
 
 ```sh
-python my_prog.py
+python my_prog.py /path/to/dcsass/videos/
 ```
