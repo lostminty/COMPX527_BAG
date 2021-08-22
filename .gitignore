@@ -130,3 +130,6 @@ dmypy.json
 
 # pytorch model files
 *.ckpt
+
+# The pickle cache is too big to upstream.
+src/pickle_jar/
