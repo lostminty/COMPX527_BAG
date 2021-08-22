@@ -4,6 +4,7 @@ COMPX527-21B A2:AWS CC App Service to detect suspicious behaviour on submitted C
 
 Training on:
 - https://www.kaggle.com/mateohervas/dcsass-dataset (requires sign in)
+Has 13 classes and flags indicating a clip is of interest to the class or normal. so, 14 classes. could in theory look at it as 26 classes
 
 No  te:
 for downloading the Dataset, the zip comes with a duplicate of the dataset.
