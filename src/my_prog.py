@@ -51,8 +51,9 @@ class DCSASS(VisionDataset):
                     continue
 
                 self.video_files.append(file_path)
-                self.labels.append(row[1])
-                self.positives.append(bool(int(row[2])) if row[2] else False)
+                #self.positives.append(bool(int(row[2])) if row[2] else False)
+                self.labels.append(row[1] if row[2] else "normal")
+                
         
         self.unique_labels = np.unique(self.labels)
         self.encoder = preprocessing.LabelEncoder()
@@ -67,6 +68,8 @@ class DCSASS(VisionDataset):
     def __getitem__(self, index):
         video = self.video_files[index]
         label = self.labels[index]
+        
+        
         if self.transform:
             video = self.transform(video)
         
@@ -86,8 +89,8 @@ class LitAutoEncoder(pl.LightningModule):
     def __init__(self):
         super().__init__()
         # first and last layer have the same size as generated Tensor
-        self.encoder = nn.Sequential(nn.Linear(DIM_SCALE[0] * DIM_SCALE[1] * LEN_SAMPLE, 64), nn.ReLU(), nn.Linear(64, 13))
-        self.decoder = nn.Sequential(nn.Linear(13, 64), nn.ReLU(), nn.Linear(64, DIM_SCALE[0] * DIM_SCALE[1] * LEN_SAMPLE))
+        self.encoder = nn.Sequential(nn.Linear(DIM_SCALE[0] * DIM_SCALE[1] * LEN_SAMPLE, 64), nn.ReLU(), nn.Linear(64, 14))
+        self.decoder = nn.Sequential(nn.Linear(14, 64), nn.ReLU(), nn.Linear(64, DIM_SCALE[0] * DIM_SCALE[1] * LEN_SAMPLE))
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
@@ -122,7 +125,7 @@ class LitAutoEncoder(pl.LightningModule):
         y_true = y.cpu().detach().numpy()
         y_pred = y_hat.argmax(axis=1).cpu().detach().numpy()
         #print(type(y_true))
-        y_pred = label_formatter(y_pred[0],13)
+        y_pred = label_formatter(y_pred[0],14)
         #print(y_pred)
         return {'loss': loss,
                 'y_true': y_true,
@@ -155,12 +158,12 @@ if __name__ == "__main__":
     
     
     dataset = DCSASS(
-        sys.argv[1],
-        transform=torchvision.transforms.Compose([
-            tf.VideoFilePathToTensor(max_len=LEN_SAMPLE, fps=2, padding_mode='last'),
-            tf.VideoGrayscale(),
-            tf.VideoResize(DIM_SCALE),
-        ])
+       sys.argv[1],
+      transform=torchvision.transforms.Compose([
+           tf.VideoFilePathToTensor(max_len=LEN_SAMPLE, fps=2, padding_mode='last'),
+           tf.VideoGrayscale(),
+           tf.VideoResize(DIM_SCALE),
+       ])
     )
     file_count = len(dataset)
     lengths = [int(file_count *0.8),int(file_count * 0.2)]
