@@ -6,6 +6,7 @@ import collections
 import random
 import cv2
 import os
+from torchvision.transforms import InterpolationMode
 
 __all__ = ['VideoFilePathToTensor', 'VideoFolderPathToTensor', 'VideoResize', 'VideoRandomCrop', 'VideoCenterCrop', 'VideoRandomHorizontalFlip', 
             'VideoRandomVerticalFlip', 'VideoGrayscale']
