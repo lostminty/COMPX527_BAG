@@ -13,19 +13,13 @@ Based on:
 - https://github.com/PyTorchLightning/pytorch-lightning
 (pytorch helper module, automates a lot of 'boilerplate code'. Has some capacity to make code more portable: TODO!)
 - https://github.com/YuxinZhaozyx/pytorch-VideoDataset 
-(videodataset helper module, just uses the dataset.py and transforms.py. Expects them to be in the same dir)
+(videodataset helper module, just uses the dataset.py and transforms.py. Expects them to be in the same dir: using only transforms.py)
 
 most of what is in the [my_prog.py](my_prog.py) is from the README.md
 
-modifications (from pytorch-lightening README.md demo code) are:
-- using the datasets.py helper methods for making the dataset objects
-- adjusting the Tensor parameters
-- adjusting the resizing
-- added Grayscale transform
-- Added in gpus=1 parameter to trainer
 
-TODO:
-for the DataLoader, one can set the num_workers parameter but it's currently left at default (None) which might be a way to improve efficient utilising of system resources.
+# TODO
+- portability
 
 
 
@@ -53,17 +47,13 @@ trainer = pl.Trainer(gpus=1)
 
 
 ### Setup Instructions - FIX ###
-
+1. Install nvidia cuda toolkit from link above
+ 
+2. 
 ```sh
-conda create --name video
-conda activate video
-conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
-conda install -c conda-forge pytorch-lightning
-conda install -c anaconda cudatoolkit
+conda env create --file ./envs/video.yml
 ```
-
-
-
+3. 
 ```sh
 python my_prog.py /path/to/dcsass/videos/
 ```
@@ -76,6 +66,9 @@ python my_prog.py /path/to/dcsass/videos/
 - VideoToTensor(frames_in_tensor=20,fps=2)
 - Grayscale
 - Resize(128,128)
+
+### Label Encoder ###
+- Not well implemented: creates a sklearn labelencoder within the dataset class init then uses a helper method to create numpy arrays
   
 ### Encoder ###
 - Linear(in=video.x*video.y*frames_in_tensor,out=64)
@@ -87,10 +80,11 @@ python my_prog.py /path/to/dcsass/videos/
 - ReLU
 - Linear(in=64,out=video.x*video.y*frames_in_tensor)
 
+### Early Stop Callback ###
+- generic callback, uses log_acc var. currently running tests
 
 ## TODO ##
 - Training Step description
 - Optimizer description
-- Validation Step implementation
-- Other? evaluation/testing step?
+- validation step & epoch_end desc
 
