@@ -1,0 +1,15 @@
+[local]
+localhost ansible_connection=local
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+[webservers]
+#13.236.94.53 ansible_ssh_private_key_file=/home/mason/.ssh/sysadmin-ec2-key.pem
+52.63.237.136
+13.54.208.45
+3.25.64.45
+
+[load_banlancer]
+#13.236.94.53 ansible_ssh_private_key_file=/home/mason/.ssh/sysadmin-ec2-key.pem
+3.106.58.86

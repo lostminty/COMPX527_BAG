@@ -1,0 +1,21 @@
+---
+  
+# tasks file for elb
+- name: install haproxy service
+  become: yes
+  apt:
+    name: haproxy
+    update_cache: yes
+    state: latest
+
+- name: add default haproxy config
+  become: yes
+  copy:
+    src: "templates/haproxy.j2"
+    dest: "/etc/haproxy/haproxy.cfg"
+  notify: restart load balancer
+
+- name: restart haproxy service
+  become: yes
+  shell: "service haproxy start"
+        
