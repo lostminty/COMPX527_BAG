@@ -1,6 +1,10 @@
 ---
   
 # tasks file for elb
+- name: install some components haproxy service 
+  become: yes
+  shell: "add-apt-repository ppa:vbernat/haproxy-2.4 -y"
+  
 - name: install haproxy service
   become: yes
   apt:
