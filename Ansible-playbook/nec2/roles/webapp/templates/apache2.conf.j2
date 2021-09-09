@@ -100,6 +100,9 @@ AccessFileName .htaccess
 # Note that the use of %{X-Forwarded-For}i instead of %h is not recommended.
 # Use mod_remoteip instead.
 #
+# for RemoteIPInternalProxym, specify HAProxy IP address
+RemoteIPHeader X-Forwarded-For
+RemoteIPInternalProxy 3.106.58.86
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
 LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
