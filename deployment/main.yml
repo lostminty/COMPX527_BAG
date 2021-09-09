@@ -1,0 +1,255 @@
+- name: Setup the portal infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    key: "{{ lookup('env', 'BAG_KEY_NAME') }}"
+    ami: "ami-0210560cedcb09f07" # Amazon Linux 2
+    # vpc: "vpc-xxxxxx" # Don't think this is necessary to explicitly specify.
+    portal_role_name: "PortalServer"
+    portal_instance: "t3a.micro"
+    portal_count: 2
+    portal_ids: []
+    zone_names: []
+
+  tasks:
+  - name: Create an IAM role to manage EC2 instances
+    iam_role:
+      name: "{{ portal_role_name }}"
+      state: present
+      description: "Manages the web portals."
+      purge_policies: true
+      # Below is a list of all the services ("Principals") from Amazon/AWS that
+      # can utilise the permissions of a role:
+      # https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
+      assume_role_policy_document: |-
+        {
+        "Version": "2012-10-17",
+        "Statement": {
+          "Effect": "Allow",
+          "Principal": {"Service": "ec2.amazonaws.com"},
+          "Action": "sts:AssumeRole"
+          }
+        }
+      # The below is a generic permission policy outlined by Amazon. Will need
+      # to configure our own more concise permissions, as this gives full
+      # control over DynamoDB.
+      managed_policy:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
+
+  - name: Wait for the IAM role to finish creating
+    pause:
+      seconds: 10
+      prompt: Waiting for the IAM role to finish creating
+
+  - name: Create a security group
+    ec2_group:
+      name: ansible
+      # vpc_id: "{{ vpc }}"
+      description: "Ansible Security Group"
+      rules:
+        - proto: tcp
+          ports: 22
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          ports: 80
+          cidr_ip: 0.0.0.0/0
+        # - proto: tcp # See further below for a comment.
+        #   ports: 443
+        #   cidr_ip: 0.0.0.0/0
+      rules_egress:
+        - proto: all
+          cidr_ip: 0.0.0.0/0
+    register: firewall
+
+  - name: Create the EC2 instances
+    ec2:
+      key_name: "{{ key }}"
+      group_id: "{{ firewall.group_id }}"
+      instance_type: "{{ portal_instance }}"
+      instance_profile_name: "{{ portal_role_name }}"
+      image: "{{ ami }}"
+      wait: yes
+      monitoring: yes
+      volumes: # Might not need this.
+        - device_name: /dev/sda1
+          volume_type: gp2
+          volume_size: 10
+          delete_on_termination: yes
+      exact_count: "{{ portal_count }}"
+      count_tag:
+         Name: portal
+      instance_tags:
+         Name: portal
+
+  - name: Get a list of all the EC2 instances
+    ec2_instance_info:
+      filters:
+        "tag:Name": portal
+        "instance-state-name": running
+        # "vpc-id": "{{ vpc }}"
+    register: ec2
+
+  - name: Add the portals to the in-memory inventory
+    add_host:
+      name: "{{ item.public_dns_name }}"
+      groups: portals
+    loop: "{{ ec2.instances }}"
+
+  - name: Wait for SSH to come up on the portals
+    wait_for:
+      host: "{{ item.public_dns_name }}"
+      port: 22
+      state: started
+      sleep: 3
+      timeout: 360
+    with_items: "{{ ec2.instances }}"
+
+  - name: Generate array of instance IDs
+    set_fact:
+      portal_ids: "{{ portal_ids }} + [ '{{ item.instance_id }}' ]"
+    with_items: "{{ ec2.instances }}"
+
+  - name: Get the availability zones for current region
+    aws_az_info:
+      filters:
+        zone-type: availability-zone
+    register: zones
+
+  - name: Generate array of zones
+    set_fact:
+      zone_names: "{{ zone_names }} + [ '{{ item.zone_name }}' ]"
+    with_items: "{{ zones.availability_zones }}"
+
+  - name: Create the elastic load balancer
+    ec2_elb_lb:
+      name: BAG
+      state: present
+      security_group_ids:
+        - "{{ firewall.group_id }}"
+      instance_ids: "{{ portal_ids }}"
+      zones: "{{ zone_names }}"
+      listeners:
+        - protocol: http
+          load_balancer_port: 80
+          instance_port: 80
+          proxy_protocol: true
+      tags:
+        Name: BAG
+
+  - name: Create the "users" table
+    dynamodb_table:
+      name: users
+      hash_key_name: email
+      hash_key_type: STRING
+      read_capacity: 4
+      write_capacity: 4
+
+  - name: Create the "sessions" table (for PHP)
+    dynamodb_table:
+      name: sessions
+      hash_key_name: id
+      hash_key_type: STRING
+      read_capacity: 4
+      write_capacity: 4
+
+- name: Configure the portals
+  hosts: portals
+  remote_user: "ec2-user"
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Enable a PHP version higher than 5
+      command: amazon-linux-extras enable php7.4
+      changed_when: false
+
+    - name: Installation of the server
+      yum:
+        state: present
+        name:
+          - php
+          - php-common
+          - php-mbstring
+          - httpd
+          # - mod_ssl # For certbot.
+          # - augeas # For certbot.
+
+    - name: Enable and start Apache2
+      service:
+        name: httpd
+        enabled: yes
+        state: started
+
+    ## Certbot (LetsEncrypt) refuses to issue certificates for the public EC2
+    ## DNS names. If we had a registered domain name for this host, then this
+    ## would work. Leaving it here for reference in the report.
+    # - name: Install certbot for the HTTPS certificate
+    #   pip:
+    #     name:
+    #       - certbot
+    #       - certbot-apache
+    #     executable: pip3
+
+    # - name: Install the certificates
+    #   command: |-
+    #     /usr/local/bin/certbot --noninteractive --agree-tos --register-unsafely-without-email --apache -d "{{ ansible_ssh_host }}"
+    #   changed_when: false
+
+    - name: Remove the old index
+      file:
+        path: /var/www/html/index.html
+        state: absent
+
+    - name: Create the directory for AWS's PHP SDK
+      file:
+        state: directory
+        path: /var/www/html/aws/
+        owner: apache
+        group: apache
+        mode: '760'
+
+    - name: Install AWS's PHP SDK
+      unarchive:
+        src: ../../ec2_src/aws.zip
+        dest: /var/www/html/aws/
+        owner: apache
+        group: apache
+
+    - name: Copy the PHP file for the portal
+      copy:
+        src: ../../ec2_src/portal.php
+        dest: /var/www/html/index.php
+        owner: apache
+        group: apache
+        mode: '440'
+        follow: true
+
+    - name: Copy the configuration file for the portal
+      copy:
+        src: ../../ec2_src/config.php
+        dest: /var/www/html/config.php
+        owner: apache
+        group: apache
+        mode: '440'
+        follow: true
+
+    - name: Copy the CSS file for the portal
+      copy:
+        src: ../../ec2_src/portal.css
+        dest: /var/www/html/portal.css
+        owner: apache
+        group: apache
+        mode: '440'
+        follow: true
+
+    - name: Copy the PHP file for the streaming API
+      copy:
+        src: ../../ec2_src/stream.php
+        dest: /var/www/html/stream.php
+        owner: apache
+        group: apache
+        mode: '440'
+        follow: true
+
+    # TODO: Only grant web access to: portal.php, portal.css, and stream.php

@@ -3,10 +3,13 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
+// TODO: Set the following regions dynamically. Maybe store this file as a
+// Jinja2 template.
+
 $db_config = [
 	'version' => '2012-08-10',
 	'region' => 'ap-southeast-2',
-	'endpoint' => 'http://localhost:8000',
+	// 'endpoint' => 'http://localhost:8000', // For local development/testing.
 ];
 
 $lambda_config = [
@@ -23,9 +26,9 @@ END;
 $new_user_prototype = [
 	'email' => [],
 	'password' => [],
-	'credit' => ['N' => 0],
-	'token_limit' => ['N' => 5],
-	'last_notification_timestamp' => ['N' => 0],
+	'credit' => ['N' => '0'],
+	'token_limit' => ['N' => '5'],
+	'last_notification_timestamp' => ['N' => '0'],
 	'notifications' => ['L' => []]
 ];
 

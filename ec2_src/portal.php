@@ -27,8 +27,13 @@ function is_logged_in()
 	return session_status() == PHP_SESSION_ACTIVE && isset($_SESSION['EMAIL']);
 }
 
-function message($text, $success = false, $warning = false, $code = 200, $ex = null)
+function message($text, $args = [])
 {
+	$success = $args['success'] ?? false;
+	$warning = $args['warning'] ?? false;
+	$code = $args['code'] ?? 200;
+	$ex = $args['ex'] ?? null;
+
 	if (!$success && $code == 200)
 	{
 		http_response_code(400);
@@ -68,12 +73,12 @@ function sign_up($db, $email, $password)
 	}
 	catch (DynamoDBException $ex)
 	{
-		return message('Internal error. Try again later.', code: 500, ex: $ex);
+		return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
 	if (!empty($result['Item']))
 	{
-		return message('User already exists.', code: 401);
+		return message('User already exists.', ['code' => 401]);
 	}
 
 	try
@@ -87,11 +92,11 @@ function sign_up($db, $email, $password)
 			'TableName' => 'users',
 			'Item' => $new_user
 		]);
-		return message('Signed up.', success: true);
+		return message('Signed up.', ['success' => true]);
 	}
 	catch (Exception $ex)
 	{
-		return message('Internal error. Try again later.', code: 500, ex: $ex);
+		return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 }
 
@@ -109,28 +114,28 @@ function sign_in($db, $email, $password)
 	}
 	catch (DynamoDBException $ex)
 	{
-		return message('Internal error. Try again later.', code: 500, ex: $ex);
+		return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
 	$user = $result['Item'];
 	if (empty($user))
 	{
-		return message(BAD_LOGIN_ERROR, code: 401);
+		return message(BAD_LOGIN_ERROR, ['code' => 401]);
 	}
 
 	if (password_verify($password, (new Marshaler())->unmarshalValue($user['password'])))
 	{
 		if (!connect_to_session($db))
 		{
-			return message('Internal error. Try again later.', code: 500, ex: 'Failed to start session');
+			return message('Internal error. Try again later.', ['code' => 500, 'ex' => 'Failed to start session']);
 		}
 
 		$_SESSION['EMAIL'] = $email;
-		return message('Signed in.', success: true);
+		return message('Signed in.', ['success' => true]);
 	}
 
 	// Don't explicitly tell them if the password was incorrect.
-	return message(BAD_LOGIN_ERROR, code: 401);
+	return message(BAD_LOGIN_ERROR, ['code' => 401]);
 }
 
 function populate_token_table($db)
@@ -145,7 +150,7 @@ function populate_token_table($db)
 	}
 	catch (DynamoDbException $ex)
 	{
-		return message('Internal error. Try again later.', code: 500, ex: $ex);
+		return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
 	if (isset($result['Item']['tokens']))
@@ -160,7 +165,7 @@ function populate_token_table($db)
 	if (empty($tokens))
 	{
 		echo '<tr scope="row"><th></th><th>&mdash;</th></tr>';
-		return message('Refreshed.', success: true);
+		return message('Refreshed.', ['success' => true]);
 	}
 
 	foreach ($tokens as $token)
@@ -179,7 +184,7 @@ function populate_token_table($db)
 			'</tr>';
 	}
 
-	return message('Refreshed.', success: true);
+	return message('Refreshed.', ['success' => true]);
 }
 
 function populate_notification_table($db)
@@ -194,7 +199,7 @@ function populate_notification_table($db)
 	}
 	catch (DynamoDbException $ex)
 	{
-		return message('Internal error. Try again later.', code: 500, ex: $ex);
+		return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
 	$notifications = (new Marshaler())->unmarshalValue($result['Item']['notifications']);
@@ -202,7 +207,7 @@ function populate_notification_table($db)
 	if (empty($notifications))
 	{
 		echo '<tr scope="row"><th>&mdash;</th><td>&mdash;</td><td>&mdash;</td></tr>';
-		return message('Refreshed.', success: true);
+		return message('Refreshed.', ['success' => true]);
 	}
 
 	foreach ($notifications as $notification)
@@ -214,32 +219,32 @@ function populate_notification_table($db)
 			'</tr>';
 	}
 
-	return message('Refreshed.', success: true);
+	return message('Refreshed.', ['success' => true]);
 }
 
 function handle_login($db, $submission)
 {
 	if (is_logged_in())
 	{
-		return message('You are already logged in. Please log out first.', code: 400);
+		return message('You are already logged in. Please log out first.', ['code' => 400]);
 	}
 
 	$submission_types = ['sign_up', 'sign_in'];
-	if (!$submission || !in_array($submission, $submission_types, strict: true))
+	if (!$submission || !in_array($submission, $submission_types, true))
 	{
-		return message('Unknown submission type.', code: 400);
+		return message('Unknown submission type.', ['code' => 400]);
 	}
 
 	$email = $_POST['email'] ?? '';
 	if (!$email)
 	{
-		return message('No email was provided.', code: 400);
+		return message('No email was provided.', ['code' => 400]);
 	}
 
 	$password = $_POST['password'] ?? '';
 	if (!$password)
 	{
-		return message('No password was provided.', code: 400);
+		return message('No password was provided.', ['code' => 400]);
 	}
 
 	return $submission($db, $email, $password);
@@ -249,7 +254,7 @@ function create_token($db)
 {
 	if (!is_logged_in())
 	{
-		return message('You are not logged in. Please log in first.', code: 401);
+		return message('You are not logged in. Please log in first.', ['code' => 401]);
 	}
 
 	try
@@ -258,7 +263,7 @@ function create_token($db)
 	}
 	catch (Exception $ex)
 	{
-		return message('Could not generate new token. Try again later.', code: 500, ex: $ex);
+		return message('Could not generate new token. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
 	try
@@ -271,7 +276,7 @@ function create_token($db)
 	}
 	catch (DynamoDbException $ex)
 	{
-		return message('Internal error. Try again later.', code: 500, ex: $ex);
+		return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
 	$token_limit = !empty($result['Item']['token_limit'])
@@ -279,7 +284,7 @@ function create_token($db)
 
 	if (!$token_limit)
 	{
-		return message('You are not permitted to create any tokens.', code: 401);
+		return message('You are not permitted to create any tokens.', ['code' => 401]);
 	}
 
 	try
@@ -291,7 +296,7 @@ function create_token($db)
 			'ConditionExpression' => 'NOT attribute_exists(tokens) OR size(tokens) < :token_limit',
 			'ExpressionAttributeValues' => [
 				':token' => ['SS' => [$token]],
-				':token_limit' => ['N' => $token_limit]
+				':token_limit' => ['N' => (string) $token_limit]
 			],
 			"ReturnValues" => 'UPDATED_NEW' // TODO: Remove this.
 		]);
@@ -304,27 +309,27 @@ function create_token($db)
 		// check for a condition fail.
 		if ($ex->getAwsErrorCode() == 'ConditionalCheckFailedException')
 		{
-			return message('You have reached your token limit.', success: true, warning: true, code: 401);
+			return message('You have reached your token limit.', ['success' => true, 'warning' => true, 'code' => 401]);
 		}
 		else
 		{
-			return message('Internal error. Try again later.', code: 500, ex: $ex);
+			return message('Internal error. Try again later.', ['code' => 500, 'ex' => $ex]);
 		}
 	}
 
-	return message('Successfully created token.', success: true);
+	return message('Successfully created token.', ['success' => true]);
 }
 
 function delete_token($db, $token)
 {
 	if (!is_logged_in())
 	{
-		return message('You are not logged in. Please log in first.', code: 401);
+		return message('You are not logged in. Please log in first.', ['code' => 401]);
 	}
 
 	if (!ctype_xdigit($token))
 	{
-		return message('The token\'s format is incorrect.', code: 400);
+		return message('The token\'s format is incorrect.', ['code' => 400]);
 	}
 
 	try
@@ -339,10 +344,10 @@ function delete_token($db, $token)
 	}
 	catch (DynamoDbException $ex)
 	{
-		return message('Could not generate new token. Try again later.', code: 500, ex: $ex);
+		return message('Could not generate new token. Try again later.', ['code' => 500, 'ex' => $ex]);
 	}
 
-	return message('Successfully deleted token.', success: true);
+	return message('Successfully deleted token.', ['success' => true]);
 }
 
 function status_bar($status)
@@ -371,8 +376,8 @@ function main($db)
 	else if (isset($_POST['refresh']))
 	{
 		return connect_to_session($db)
-			? message('Refreshed.', success: true)
-			: message('Failed to refresh. Please sign in again.', code: 401);
+			? message('Refreshed.', ['success' => true])
+			: message('Failed to refresh. Please sign in again.', ['code' => 401]);
 	}
 	else if (isset($_POST['create_token']))
 	{
@@ -380,8 +385,7 @@ function main($db)
 			? create_token($db)
 			: message(
 				'Internal error. Try again later.',
-				code: 500,
-				ex: 'Session starter failed.'
+				['code' => 500, 'ex' => 'Session starter failed.']
 			);
 	}
 	else if (!empty($_POST['delete_token']))
@@ -390,8 +394,7 @@ function main($db)
 			? delete_token($db, $_POST['delete_token'])
 			: message(
 				'Internal error. Try again later.',
-				code: 500,
-				ex: 'Session starter failed.'
+				['code' => 500, 'ex' => 'Session starter failed.']
 			);
 	}
 	else if (isset($_POST['logout']))
@@ -403,11 +406,11 @@ function main($db)
 			session_destroy();
 		}
 
-		return message('Signed out.', success: true);
+		return message('Signed out.', ['success' => true]);
 	}
 	else
 	{
-		return message('Unknown or malformed POST request.', code: 400);
+		return message('Unknown or malformed POST request.', ['code' => 400]);
 	}
 }
 
@@ -419,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	}
 	catch (Exception $ex)
 	{
-		echo message('Internal error. Please try again later.', code: 500, ex: $ex)['text'];
+		echo message('Internal error. Please try again later.', ['code' => 500, 'ex' => $ex])['text'];
 		die();
 	}
 

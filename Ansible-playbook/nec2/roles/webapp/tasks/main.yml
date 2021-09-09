@@ -59,18 +59,18 @@
         state: present
       loop:
         - php
-        - php-cli
-        - php-mysql
-        - php-pdo
-        - php-curl
         - php-common
-        - php-bz2
-        - php-curl
-        - php-gd
-        - php-imap
-        - php-mbstring
-        - php-zip
-        - php-xml
+        # - php-cli # Don't need these modules.
+        # - php-mysql
+        # - php-pdo
+        # - php-curl
+        # - php-bz2
+        # - php-curl
+        # - php-gd
+        # - php-imap
+        # - php-mbstring
+        # - php-zip
+        # - php-xml
 
     - name: Restart Apache service
       become: yes
