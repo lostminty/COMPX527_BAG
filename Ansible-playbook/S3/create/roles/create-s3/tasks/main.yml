@@ -1,0 +1,9 @@
+---
+- name: Create S3 bucket
+  include_tasks:
+    file: deploy.yml
+    apply:
+      tags:
+        - deploy-s3
+  tags:
+    - deploy-s3

@@ -1,0 +1,33 @@
+---
+
+- name: Create s3 bucket 
+  aws_s3:
+    bucket: "{{ bucket_name }}"
+    mode: create
+    permission: public-read 
+
+- name: Create policy file for bucket
+  template:
+    src: "{{ role_path }}/templates/s3-web-access-policy.json.j2"
+    dest: "{{ role_path}}/files/s3-web-access-policy.json"
+ 
+- name: Apply policy
+  command: "aws s3api put-bucket-policy --bucket {{ bucket_name }} --policy file:///{{ role_path }}/files/s3-web-access-policy.json"
+
+- name: upload blog to s3
+  command: "aws s3 cp {{ blog_root_dir }}/ s3://{{ bucket_name }}/ --recursive"
+
+- name: Add website configuration to the s3 bucket
+  s3_website:
+    name: "{{ bucket_name }}"
+    state: present
+    suffix: index.html
+    region: us-east-1
+
+- name: Create other buckets
+  aws_s3:
+    bucket: "{{ item }}"
+    mode: create
+    permission: public-read
+  with_items:
+    - "{{ other_buckets }}"

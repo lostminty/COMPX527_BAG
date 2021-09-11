@@ -1,0 +1,19 @@
+---
+- name: Create S3 bucket
+  include_tasks:
+    file: deploy.yml
+    apply:
+      tags:
+        - deploy-live-s3
+  tags:
+    - deploy-live-s3
+
+- name: Remove S3 bucket
+  include_tasks:
+    file: remove.yml
+    apply:
+      tags:
+        - remove-bucket
+  tags:
+    - remove-bucket
+

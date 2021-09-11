@@ -1,0 +1,20 @@
+---
+# ansible-playbook main.yml --tags deploy-live-s3
+- name: Create new s3 bucket
+  hosts: localhost
+  remote_user: root
+  roles:
+    - { role: create-s3 }
+
+- name: upload comp527.live to s3
+  hosts: localhost
+  remote_user: root
+  roles:
+    - { role: deploy-s3 }
+
+- name: Remove bucket from s3
+  hosts: localhost
+  remote_user: root
+  roles:
+    - { role: remove-s3 }
+

@@ -1,0 +1,25 @@
+---
+  
+# tasks file for elb
+- name: install some components haproxy service 
+  become: yes
+  shell: "add-apt-repository ppa:vbernat/haproxy-2.4 -y"
+  
+- name: install haproxy service
+  become: yes
+  apt:
+    name: haproxy
+    update_cache: yes
+    state: latest
+
+- name: add default haproxy config
+  become: yes
+  copy:
+    src: "templates/haproxy.j2"
+    dest: "/etc/haproxy/haproxy.cfg"
+  notify: restart load balancer
+
+- name: restart haproxy service
+  become: yes
+  shell: "service haproxy start"
+        

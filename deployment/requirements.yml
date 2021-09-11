@@ -1,0 +1,7 @@
+collections:
+  - name: amazon.aws
+    type: galaxy
+  - name: community.aws
+    type: galaxy
+  - name: community.general
+    type: galaxy
