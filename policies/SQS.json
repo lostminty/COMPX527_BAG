@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1631617648401",
+      "Action": [
+        "sqs:CreateQueue",
+        "sqs:DeleteMessage",
+        "sqs:DeleteMessageBatch",
+        "sqs:DeleteQueue",
+        "sqs:ListQueues",
+        "sqs:PurgeQueue",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
