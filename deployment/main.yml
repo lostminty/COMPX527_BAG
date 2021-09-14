@@ -24,29 +24,33 @@
       # https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
       assume_role_policy_document: |-
         {
-        "Version": "2012-10-17",
-        "Statement": {
-          "Effect": "Allow",
-          "Principal": {"Service": "ec2.amazonaws.com"},
-          "Action": "sts:AssumeRole"
+          "Version": "2012-10-17",
+          "Statement":
+          {
+            "Effect": "Allow",
+            "Principal": {"Service": "ec2.amazonaws.com"},
+            "Action": "sts:AssumeRole"
           }
         }
-      # The below is a generic permission policy outlined by Amazon. Will need
-      # to configure our own more concise permissions, as this gives full
-      # control over DynamoDB.
-      managed_policy:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforDataPipelineRole
 
   - name: Wait for the IAM role to finish creating
     pause:
       seconds: 10
-      prompt: Waiting for the IAM role to finish creating
+
+  - name: Apply our inline policy to the portal role
+    iam_policy:
+      state: present
+      iam_type: role
+      iam_name: "{{ portal_role_name }}"
+      policy_name: "PortalPolicy"
+      policy_json: "{{ lookup('file', '../../policies/portal.json') }}"
+      skip_duplicates: yes
 
   - name: Create a security group
     ec2_group:
-      name: ansible
+      name: firewall
       # vpc_id: "{{ vpc }}"
-      description: "Ansible Security Group"
+      description: "Web portal firewall."
       rules:
         - proto: tcp
           ports: 22
@@ -137,21 +141,33 @@
       tags:
         Name: BAG
 
+  - name: Create the "sessions" table (for PHP)
+    dynamodb_table:
+      state: present
+      name: sessions
+      hash_key_name: id
+      hash_key_type: STRING
+      read_capacity: 4
+      write_capacity: 4
+
   - name: Create the "users" table
     dynamodb_table:
+      state: present
       name: users
       hash_key_name: email
       hash_key_type: STRING
       read_capacity: 4
       write_capacity: 4
 
-  - name: Create the "sessions" table (for PHP)
-    dynamodb_table:
-      name: sessions
-      hash_key_name: id
-      hash_key_type: STRING
-      read_capacity: 4
-      write_capacity: 4
+  - name: Wait for the "sessions" table to finish creating
+    pause:
+      seconds: 10
+
+  - name: Set a TTL attribute ("sessions" table garbage collection)
+    dynamodb_ttl:
+      state: enable
+      table_name: sessions
+      attribute_name: expires
 
 - name: Configure the portals
   hosts: portals

@@ -1,0 +1,25 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1631614195138",
+      "Action": [
+        "cloudwatch:*",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem",
+        "lambda:InvokeFunction"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:dynamodb:*:*:table/users",
+        "arn:aws:dynamodb:*:*:table/sessions",
+        "arn:aws:lambda:*:*:function:predict"
+      ]
+    }
+  ]
+}
