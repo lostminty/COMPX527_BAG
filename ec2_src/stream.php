@@ -7,8 +7,8 @@ use Aws\Lambda\Exception\LambdaException;
 
 if (
 	$_SERVER['REQUEST_METHOD'] != 'POST'
-	|| empty($_POST['e']) || empty($_POST['t'])
-	|| empty($_POST['i']) || empty($_POST['d'])
+	|| empty($_POST['email']) || empty($_POST['token'])
+	|| empty($_POST['identifier']) || empty($_POST['image'])
 )
 {
 	http_response_code(400);
@@ -27,10 +27,10 @@ catch (LambdaException $ex)
 }
 
 $payload = json_encode([
-	'email' => $_POST['e'],
-	'token' => $_POST['t'],
-	'identifier' => $_POST['i'],
-	'image' => $_POST['d']
+	'email' => $_POST['email'],
+	'token' => $_POST['token'],
+	'identifier' => $_POST['identifier'],
+	'image' => $_POST['image']
 ]);
 
 if (!$payload)
@@ -54,3 +54,4 @@ catch (LambdaException $ex)
 }
 
 http_response_code($result['StatusCode']);
+exit($result['Payload']);
