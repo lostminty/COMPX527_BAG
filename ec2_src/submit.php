@@ -1,6 +1,6 @@
 <?php
-require 'aws/aws-autoloader.php';
-require 'config.php';
+require 'config/aws/aws-autoloader.php';
+require 'config/config.php';
 
 use Aws\Lambda\LambdaClient;
 use Aws\Lambda\Exception\LambdaException;

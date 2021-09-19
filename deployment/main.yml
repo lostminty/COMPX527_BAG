@@ -75,11 +75,6 @@
       image: "{{ ami }}"
       wait: yes
       monitoring: yes
-      volumes: # Might not need this.
-        - device_name: /dev/sda1
-          volume_type: gp2
-          volume_size: 10
-          delete_on_termination: yes
       exact_count: "{{ portal_count }}"
       count_tag:
          Name: portal
@@ -175,6 +170,9 @@
   gather_facts: false
   become: true
 
+  vars:
+    base_dir: /var/www/portal
+
   tasks:
     - name: Enable a PHP version higher than 5
       command: amazon-linux-extras enable php7.4
@@ -191,11 +189,14 @@
           # - mod_ssl # For certbot.
           # - augeas # For certbot.
 
-    - name: Enable and start Apache2
-      service:
-        name: httpd
-        enabled: yes
-        state: started
+    - name: Copy the configuration file for httpd (Apache2)
+      copy:
+        src: ../../ec2_src/httpd.conf
+        dest: /etc/httpd/conf/httpd.conf
+        owner: root
+        group: root
+        mode: '664'
+        follow: true
 
     ## Certbot (LetsEncrypt) refuses to issue certificates for the public EC2
     ## DNS names. If we had a registered domain name for this host, then this
@@ -212,15 +213,18 @@
     #     /usr/local/bin/certbot --noninteractive --agree-tos --register-unsafely-without-email --apache -d "{{ ansible_ssh_host }}"
     #   changed_when: false
 
-    - name: Remove the old index
+    - name: Create the directory for the portal files
       file:
-        path: /var/www/html/index.html
-        state: absent
+        path: "{{ base_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '755'
 
-    - name: Create the directory for AWS's PHP SDK
+    - name: Create the config directory and the directory for AWS's PHP SDK
       file:
         state: directory
-        path: /var/www/html/aws/
+        path: "{{ base_dir }}/config/aws/"
         owner: apache
         group: apache
         mode: '760'
@@ -228,44 +232,73 @@
     - name: Install AWS's PHP SDK
       unarchive:
         src: ../../ec2_src/aws.zip
-        dest: /var/www/html/aws/
+        dest: "{{ base_dir }}/config/aws/"
         owner: apache
         group: apache
-
-    - name: Copy the PHP file for the portal
-      copy:
-        src: ../../ec2_src/portal.php
-        dest: /var/www/html/index.php
-        owner: apache
-        group: apache
-        mode: '440'
-        follow: true
 
     - name: Copy the configuration file for the portal
       copy:
         src: ../../ec2_src/config.php
-        dest: /var/www/html/config.php
+        dest: "{{ base_dir }}/config/config.php"
         owner: apache
         group: apache
         mode: '440'
-        follow: true
+
+    - name: Copy the PHP file for the portal
+      copy:
+        src: ../../ec2_src/portal.php
+        dest: "{{ base_dir }}/index.php"
+        owner: apache
+        group: apache
+        mode: '440'
 
     - name: Copy the CSS file for the portal
       copy:
         src: ../../ec2_src/portal.css
-        dest: /var/www/html/portal.css
+        dest: "{{ base_dir }}/portal.css"
         owner: apache
         group: apache
         mode: '440'
-        follow: true
 
-    - name: Copy the PHP file for the streaming API
+    - name: Copy the PHP file for the submission API
       copy:
-        src: ../../ec2_src/stream.php
-        dest: /var/www/html/stream.php
+        src: ../../ec2_src/submit.php
+        dest: "{{ base_dir }}/submit.php"
         owner: apache
         group: apache
         mode: '440'
-        follow: true
 
-    # TODO: Only grant web access to: portal.php, portal.css, and stream.php
+    - name: Enable and start Apache2
+      service:
+        name: httpd
+        enabled: yes
+        state: started
+
+- name: Configure the lambdas and other infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    # TODO: Create Lambda functions here.
+
+    - name: Create the main SQS queue
+      sqs_queue:
+        state: present
+        name: Queue_User_Notification
+      register: sqs
+
+    - name: Create the Lambda event for the SQS queue
+      lambda_event:
+        state: present
+        function_name: Lambda_User_Notification
+        event_source: sqs
+        source_params:
+          batch_size: 1
+          source_arn: "{{ sqs.queue_arn }}"
+
+    - name: Create the SNS topic for CloudWatch etc.
+      sns_topic:
+        name: CloudWatchAlarm
+        state: present
+        display_name: "A topic for informing developers."
+        purge_subscriptions: no

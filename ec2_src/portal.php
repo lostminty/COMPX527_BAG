@@ -1,6 +1,6 @@
 <?php
-require 'aws/aws-autoloader.php';
-require 'config.php';
+require 'config/aws/aws-autoloader.php';
+require 'config/config.php';
 
 use Aws\DynamoDb\SessionHandler;
 use Aws\DynamoDb\DynamoDbClient;
@@ -214,8 +214,8 @@ function populate_notification_table($db)
 	{
 		echo '<tr scope="row">' .
 			'<th>' . ($notification['timestamp'] ?? '&mdash;') . '</th>' .
-			'<td>' . ($notification['identifier'] ?? '&mdash;') . '</td>' .
-			'<td>' . ($notification['anomaly'] ?? 'Unknown') . '</td>' .
+			'<td>' . (filter_var($notification['identifier'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH) ?? '&mdash;') . '</td>' .
+			'<td>' . (filter_var($notification['anomaly'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH) ?? 'Unknown') . '</td>' .
 			'</tr>';
 	}
 
