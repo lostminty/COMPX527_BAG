@@ -47,7 +47,8 @@ trainer = pl.Trainer(gpus=1)
 ```
 
 
-### Setup Instructions - FIX ###
+### Setup Instructions ###
+
 1. Install nvidia cuda toolkit from link above
  
 2. 
@@ -58,19 +59,27 @@ conda env create --file ./envs/video.yml
 ```sh
 python my_prog.py /path/to/dcsass/videos/
 ```
+### Use - Generic ###
 
+```python
+import predict
+with open ("output.txt", "r") as myfile:
+    data=myfile.readlines()
 
+predict.predictor(data,"./example.ckpt")
+```
 
 ## Notes ##
 
 ### Transforms ###
-- VideoToTensor(frames_in_tensor=20,fps=2)
+- VideoToTensor(frames_in_tensor=10,fps=2)
 - Grayscale
 - Resize(128,128)
 
 ### Label Encoder ###
 - Not well implemented: creates a sklearn labelencoder within the dataset class init then uses a helper method to create numpy arrays
-  
+- Labels in my_prog.py available as a global var list which the predict.py uses to relabel identify it's output predictions
+- 
 ### Encoder ###
 - Linear(in=video.x*video.y*frames_in_tensor,out=64)
 - ReLU
@@ -83,9 +92,13 @@ python my_prog.py /path/to/dcsass/videos/
 
 ### Early Stop Callback ###
 - generic callback, uses log_acc var. currently running tests
+- Note: Doesn't produce a stable model
+
+### Forward Step ###
+- Unpacks tuple. taking the frame representation only, ignoring any category
+- Passes through the encoder and returns residual
 
 ## TODO ##
-- Training Step description
 - Optimizer description
 - validation step & epoch_end desc
 
