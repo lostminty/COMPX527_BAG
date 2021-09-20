@@ -1,7 +1,11 @@
-import my_prog as mp
+from src.litautoencoder import LitAutoEncoder
 import pytorch_lightning as pl
 import torch
 import json
+
+LABELS=['Abuse', 'Arrest', 'Arson', 'Assault', 'Burglary', 'Explosion',
+       'Fighting', 'RoadAccidents', 'Robbery', 'Shooting', 'Shoplifting',
+       'Stealing', 'Vandalism', 'normal']
 
 
 class loader(torch.utils.data.Dataset):
@@ -20,8 +24,8 @@ class loader(torch.utils.data.Dataset):
     
 
 
-def predictor(json_strings,model_path="./model.pt"):
-    encoder = mp.LitAutoEncoder()
+def predictor(json_strings,model_path="example.ckpt"):
+    encoder = LitAutoEncoder()
     encoder.load_from_checkpoint(model_path)
     trainer = pl.Trainer(gpus=-1, auto_select_gpus=True)
     is_single = None
@@ -42,11 +46,11 @@ def predictor(json_strings,model_path="./model.pt"):
     
     if is_single:
         return_val = torch.Tensor.tolist(predictions[0])
-        return_val = {'label':mp.labels[return_val.index(max(return_val))],'confidence':max(return_val)}
+        return_val = {'label':labels[return_val.index(max(return_val))],'confidence':max(return_val)}
     else:
         vals=list(map(lambda x: torch.Tensor.tolist(x),predictions))
         top_vals = [max(x) for x in vals]
         top_vals_indicies =[val_entry.index(x) for x,val_entry in zip(top_vals,vals)]
-        return_val = [{"label":mp.labels[index],"confidence":top_val[index]} for index,top_val in zip(top_vals_indicies,top_vals)]
+        return_val = [{"label":LABELS[index],"confidence":round(top_val[index],3)} for index,top_val in zip(top_vals_indicies,top_vals)]
     
     return json.dumps(return_val)
