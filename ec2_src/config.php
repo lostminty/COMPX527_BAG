@@ -1,10 +1,10 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 'On');
+// Debug information. Left off.
+// error_reporting(E_ALL);
+// ini_set('display_errors', 'On');
 
-// TODO: Set the following regions dynamically. Maybe store this file as a
-// Jinja2 template.
+// Set the following regions as you need.
 
 $db_config = [
 	'version' => '2012-08-10',
@@ -28,7 +28,6 @@ $new_user_prototype = [
 	'password' => [],
 	'credit' => ['N' => '0'],
 	'token_limit' => ['N' => '5'],
-	'last_notification_timestamp' => ['N' => '0'],
 	'notifications' => ['L' => []]
 ];
 
