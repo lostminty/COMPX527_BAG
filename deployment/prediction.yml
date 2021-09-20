@@ -1,0 +1,121 @@
+- name: Configure the prediction infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    predict_role_name: Predict
+    notify_role_name: Notify
+
+  tasks:
+    - name: Create an IAM role for the predict function
+      iam_role:
+        name: "{{ predict_role_name }}"
+        state: present
+        description: "Able to initiate a prediction."
+        purge_policies: true
+        assume_role_policy_document: |-
+          {
+            "Version": "2012-10-17",
+            "Statement":
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": "lambda.amazonaws.com"},
+              "Action": "sts:AssumeRole"
+            }
+          }
+
+    - name: Create an IAM role for the notify function
+      iam_role:
+        name: "{{ notify_role_name }}"
+        state: present
+        description: "Able to send notifications."
+        purge_policies: true
+        assume_role_policy_document: |-
+          {
+            "Version": "2012-10-17",
+            "Statement":
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": "lambda.amazonaws.com"},
+              "Action": "sts:AssumeRole"
+            }
+          }
+
+    - name: Wait for the IAM roles to finish creating
+      pause:
+        seconds: 10
+
+    - name: Apply our inline policy to the predict function's role
+      iam_policy:
+        state: present
+        iam_type: role
+        iam_name: "{{ predict_role_name }}"
+        policy_name: PredictPolicy
+        policy_json: "{{ lookup('file', '../../policies/predict.json') }}"
+        skip_duplicates: yes
+
+    - name: Apply our inline policy to the notify function's role
+      iam_policy:
+        state: present
+        iam_type: role
+        iam_name: "{{ notify_role_name }}"
+        policy_name: NotifyPolicy
+        policy_json: "{{ lookup('file', '../../policies/notify.json') }}"
+        skip_duplicates: yes
+
+    - name: Create the CloudWatch log groups
+      cloudwatchlogs_log_group:
+        state: present
+        log_group_name: "/aws/lambda/{{ item.name }}"
+      loop:
+        - name: predict
+        - name: notify
+
+    - name: Create the deployment files for the Lambda functions
+      archive:
+        path: "../predictor_src/{{ item.name }}.py"
+        dest: "../predictor_src/{{ item.name }}.zip"
+        format: zip
+        force_archive: yes
+      loop:
+        - name: predict
+        - name: notify
+
+    - name: Create the Lambda functions
+      lambda:
+        name: "{{ item.name }}"
+        state: present
+        zip_file: "../predictor_src/{{ item.zip_file }}"
+        runtime: 'python3.9'
+        role: "{{ item.role }}"
+        handler: "{{ item.name }}.lambda_handler"
+      loop:
+        - name: predict
+          zip_file: predict.zip
+          role: Predict
+        - name: notify
+          zip_file: notify.zip
+          role: Notify
+
+    - name: Create the main SQS queue
+      sqs_queue:
+        state: present
+        name: notifications
+      register: sqs
+
+    - name: Create the Lambda event for the SQS queue
+      lambda_event:
+        state: present
+        function_name: notify
+        event_source: sqs
+        source_params:
+          batch_size: 1 # This can be set to anything, but 1 will do.
+          source_arn: "{{ sqs.queue_arn }}"
+
+    - name: Create the SNS topic for CloudWatch etc.
+      sns_topic:
+        name: CloudWatchAlarm
+        state: present
+        display_name: "A topic for informing developers."
+        purge_subscriptions: no
+    

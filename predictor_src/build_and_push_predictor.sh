@@ -21,3 +21,8 @@ docker tag $name:latest "$url/$name:latest"
 docker push "$url/$name:latest"
 
 docker logout $url
+
+aws lambda create-function \
+	--function-name predictor \
+	--package-type Image \
+	--code ImageUri=$url/$name:latest

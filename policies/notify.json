@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1631617648401",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "ses:SendEmail",
+        "sqs:DeleteMessage",
+        "sqs:DeleteMessageBatch",
+        "sqs:ReceiveMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:/aws/lambda/notify:*",
+        "arn:aws:sqs:*:*:notifications",
+        "arn:aws:ses:*:*:*"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,0 @@
----
-# defaults file for ec2-provision
-managing_ubuntu: "{{ (ansible_distribution == 'Ubuntu') | bool }}"
-ec2_key_name: "sysadmin-ec2-key"
-ec2_private_key_dir: "/home/mason/.ssh/sysadmin-ec2-key.pem"

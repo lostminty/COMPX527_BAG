@@ -25,9 +25,11 @@ your key pair (which should have 0600 permissions or you will get an error):
 >
 >export BAG_KEY_NAME=my_key_pair_name
 
-There are more variables to edit in "main.yml" if you want to customise the
-deployment further.
+There are more variables to edit in the two playbooks if you want to customise
+the deployment further.
 
-Finally, run the following to execute the playbook:
+Finally, run the following deploy the solution:
 
->ansible-playbook main.yml
+>ansible-playbook portal.yml
+
+>ansible-playbook prediction.yml

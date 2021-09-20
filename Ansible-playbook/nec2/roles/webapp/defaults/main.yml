@@ -1,4 +1,0 @@
----
-# defaults file for webapp
-hosts: webservers
-remote_user: ubuntu

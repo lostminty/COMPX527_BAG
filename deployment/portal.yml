@@ -1,3 +1,4 @@
+# The project is small enough to be configured in a few plays within a single playbook.
 - name: Setup the portal infrastructure
   hosts: localhost
   gather_facts: false
@@ -6,7 +7,7 @@
     key: "{{ lookup('env', 'BAG_KEY_NAME') }}"
     ami: "ami-0210560cedcb09f07" # Amazon Linux 2
     # vpc: "vpc-xxxxxx" # Don't think this is necessary to explicitly specify.
-    portal_role_name: "PortalServer"
+    portal_role_name: PortalServer
     portal_instance: "t3a.micro"
     portal_count: 2
     portal_ids: []
@@ -42,7 +43,7 @@
       state: present
       iam_type: role
       iam_name: "{{ portal_role_name }}"
-      policy_name: "PortalPolicy"
+      policy_name: PortalPolicy
       policy_json: "{{ lookup('file', '../../policies/portal.json') }}"
       skip_duplicates: yes
 
@@ -273,32 +274,3 @@
         name: httpd
         enabled: yes
         state: started
-
-- name: Configure the lambdas and other infrastructure
-  hosts: localhost
-  gather_facts: false
-
-  tasks:
-    # TODO: Create Lambda functions here.
-
-    - name: Create the main SQS queue
-      sqs_queue:
-        state: present
-        name: Queue_User_Notification
-      register: sqs
-
-    - name: Create the Lambda event for the SQS queue
-      lambda_event:
-        state: present
-        function_name: Lambda_User_Notification
-        event_source: sqs
-        source_params:
-          batch_size: 1
-          source_arn: "{{ sqs.queue_arn }}"
-
-    - name: Create the SNS topic for CloudWatch etc.
-      sns_topic:
-        name: CloudWatchAlarm
-        state: present
-        display_name: "A topic for informing developers."
-        purge_subscriptions: no

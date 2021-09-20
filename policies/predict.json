@@ -2,24 +2,26 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "Stmt1631614195138",
+      "Sid": "Stmt1631614199182",
       "Action": [
         "cloudwatch:*",
-        "logs:*",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
         "dynamodb:BatchWriteItem",
-        "dynamodb:DeleteItem",
         "dynamodb:GetItem",
         "dynamodb:PutItem",
-        "dynamodb:Query",
-        "dynamodb:Scan",
         "dynamodb:UpdateItem",
+        "sqs:GetQueueUrl",
+        "sqs:ListQueues",
+        "sqs:SendMessage",
         "lambda:InvokeFunction"
       ],
       "Effect": "Allow",
       "Resource": [
+        "arn:aws:logs:*:*:log-group:/aws/lambda/predict:*",
         "arn:aws:dynamodb:*:*:table/users",
-        "arn:aws:dynamodb:*:*:table/sessions",
-        "arn:aws:lambda:*:*:function:predict"
+        "arn:aws:lambda:*:*:function:predictor",
+        "arn:aws:sqs:*:*:notifications"
       ]
     }
   ]
