@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # pytorch model files
-*.ckpt
+#*.ckpt
 
 # Visual Studio Code
 .vscode/
