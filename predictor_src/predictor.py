@@ -5,7 +5,7 @@ import json
 
 LABELS = ['Abuse', 'Arrest', 'Arson', 'Assault', 'Burglary', 'Explosion',
           'Fighting', 'RoadAccidents', 'Robbery', 'Shooting', 'Shoplifting',
-          'Stealing', 'Vandalism', 'normal']
+          'Stealing', 'Vandalism', '-']
 
 
 class loader(torch.utils.data.Dataset):
@@ -24,10 +24,10 @@ class loader(torch.utils.data.Dataset):
         return self.video_files[index], self.labels[index]
 
 
-def predictor(json_strings, model_path="example.ckpt"):
+def predictor(json_strings, model_path="model.ckpt"):
     encoder = LitAutoEncoder()
     encoder.load_from_checkpoint(model_path)
-    trainer = pl.Trainer(gpus=None)
+    trainer = pl.Trainer(gpus=None, logger=False)
     is_single = None
 
     if isinstance(json_strings, str):
@@ -38,13 +38,13 @@ def predictor(json_strings, model_path="example.ckpt"):
     test_dataset = loader(json_strings)
 
     data_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=1, shuffle=True, pin_memory=True)
+        test_dataset, batch_size=1, shuffle=True)
 
     predictions = trainer.predict(encoder, data_loader)
 
     if is_single:
         return_val = torch.Tensor.tolist(predictions[0])
-        return_val = {'label': labels[return_val.index(
+        return_val = {'label': LABELS[return_val.index(
             max(return_val))], 'confidence': max(return_val)}
     else:
         vals = list(map(lambda x: torch.Tensor.tolist(x), predictions))
@@ -54,8 +54,8 @@ def predictor(json_strings, model_path="example.ckpt"):
         return_val = [{"label": LABELS[index], "confidence":round(
             top_val[index], 3)} for index, top_val in zip(top_vals_indicies, top_vals)]
 
-    return json.dumps(return_val)
+    return return_val  # Lambda instance will stringify it for us.
 
 
 def lambda_handler(event, context):
-    return predictor(event["image"])
+    return predictor(event)

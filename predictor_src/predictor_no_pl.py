@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 
+# NOTE: This does not work. This class has no `predict()`.
 class LitAutoEncoder(nn.Module):
     def __init__(self):
         super().__init__()
@@ -78,7 +79,7 @@ class LitAutoEncoder(nn.Module):
 
 LABELS = ['Abuse', 'Arrest', 'Arson', 'Assault', 'Burglary', 'Explosion',
           'Fighting', 'RoadAccidents', 'Robbery', 'Shooting', 'Shoplifting',
-          'Stealing', 'Vandalism', 'normal']
+          'Stealing', 'Vandalism', '-']
 
 
 class loader(torch.utils.data.Dataset):
@@ -119,7 +120,7 @@ def predictor(json_strings, model_path="example.ckpt"):
 
     if is_single:
         return_val = torch.Tensor.tolist(predictions[0])
-        return_val = {'label': labels[return_val.index(
+        return_val = {'label': LABELS[return_val.index(
             max(return_val))], 'confidence': max(return_val)}
     else:
         vals = list(map(lambda x: torch.Tensor.tolist(x), predictions))
@@ -133,4 +134,4 @@ def predictor(json_strings, model_path="example.ckpt"):
 
 
 def lambda_handler(event, context):
-    return predictor(event["image"])
+    return predictor(event)

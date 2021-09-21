@@ -38,5 +38,7 @@ else
 		--function-name $name \
 		--role "arn:aws:iam::$AWS_ID:role/${name^}" \
 		--package-type Image \
+		--timeout 600 \
+		--memory-size 1024 \
 		--code ImageUri=$url/$name:latest
 fi

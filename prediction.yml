@@ -102,20 +102,25 @@
         - name: predict
         - name: notify
 
-    - name: Create the Lambda functions
+    - name: Create the predict Lambda function
       lambda:
-        name: "{{ item.name }}"
+        name: predict
         state: present
-        zip_file: "lambda_src/{{ item.name }}.zip"
+        zip_file: "lambda_src/predict.zip"
         runtime: 'python3.9'
-        role: "{{ item.role }}"
-        handler: "{{ item.name }}.lambda_handler"
-        timeout: 15 # This is in seconds.
-      loop:
-        - name: predict
-          role: "{{ predict_role_name }}"
-        - name: notify
-          role:  "{{ notify_role_name }}"
+        role: "{{ predict_role_name }}"
+        handler: "predict.lambda_handler"
+        timeout: 600 # This is in seconds.
+
+    - name: Create the notify Lambda function
+      lambda:
+        name: notify
+        state: present
+        zip_file: "lambda_src/notify.zip"
+        runtime: 'python3.9'
+        role: "{{ notify_role_name }}"
+        handler: "notify.lambda_handler"
+        timeout: 15
 
     - name: Remove the local deployment files
       file:

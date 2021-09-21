@@ -5,6 +5,8 @@ require 'config/config.php';
 use Aws\Lambda\LambdaClient;
 use Aws\Lambda\Exception\LambdaException;
 
+set_time_limit($submission_timeout);
+
 if ($_SERVER['REQUEST_METHOD'] != 'POST' || empty($_POST['check']))
 {
 	http_response_code(400);

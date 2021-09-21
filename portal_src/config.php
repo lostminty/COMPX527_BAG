@@ -32,3 +32,4 @@ $new_user_prototype = [
 ];
 
 $token_length = 24;
+$submission_timeout = 1000; // 900 seconds is the max for Lambdas.

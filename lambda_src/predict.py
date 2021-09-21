@@ -16,7 +16,8 @@ def lambda_handler(event, context):
     try:
         email = event['email']
         token = event['token']
-        image = event['image']
+        if 'data' not in event:
+            raise KeyError()
     except:
         return {
             'statusCode': 400,
@@ -35,6 +36,11 @@ def lambda_handler(event, context):
 
     try:
         minimum_confidence = float(event['minimum_confidence'])
+    except ValueError:
+        return {
+            'statusCode': 400,
+            'body': json_message('Minimum confidence value could not be parsed.')
+        }
     except:
         minimum_confidence = 50.0
 
@@ -53,17 +59,32 @@ def lambda_handler(event, context):
     try:  # This is where we get our classification.
         result = boto3.client('lambda').invoke(
             FunctionName='predictor',
-            Payload=json.dumps({'image': image}))
-        payload = json.loads(result['Payload'])
-        anomaly = payload['anomaly']
-        confidence = payload['confidence']
+            Payload=json.dumps(event['data']))
     except:
         return {
             'statusCode': 500,
-            'body': json_message('Internal error.')
+            'body': json_message('Internal predictor error.')
         }
 
-    if anomaly and confidence >= minimum_confidence:
+    payload_stream = result['Payload']
+    payload = json.loads(payload_stream.read())
+    payload_stream.close()
+
+    try:
+        anomaly = payload['label']
+        # TODO: Need a 0% to 100% likelihood value, not an array of all the
+        # confidences.
+        try:
+            confidence = float(payload['confidence'])
+        except:
+            confidence = float('inf')
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json_message(f'Internal prediction result error. {e}')
+        }
+
+    if anomaly != '-' and confidence >= minimum_confidence:
         timestamped = int(time())
 
         sqs.send_message(MessageBody=json.dumps({

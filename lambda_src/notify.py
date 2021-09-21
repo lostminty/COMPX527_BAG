@@ -8,16 +8,17 @@ ses = boto3.client('ses')
 
 
 def message_template(anomaly, timestamp, identifier, confidence):
-    date = datetime.fromtimestamp(int(timestamp)).isoformat()
+    date = datetime.utcfromtimestamp(int(timestamp)).isoformat()
+    confidence = f'{confidence:.2f}%' if confidence != float('inf') else 'not'
     return {
         'Subject': {
             'Data': 'BAG - Anomaly Detected'
         },
         'Body': {
             'Text': {
-                'Data': f'The anomaly "{anomaly}" was detected at ' +
-                f'{date} (UTC) with the identifier "{identifier}".\n' +
-                f'We are {confidence:.2f}% sure of this anomaly.'
+                'Data': (f'The anomaly "{anomaly}" was detected at '
+                         f'{date} (UTC) with the identifier "{identifier}".\n'
+                         f'We are {confidence} sure of this anomaly.')
             }
         }
     }
