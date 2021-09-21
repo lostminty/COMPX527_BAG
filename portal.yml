@@ -1,7 +1,12 @@
-# The project is small enough to be configured in a few plays within a single playbook.
 - name: Setup the portal infrastructure
   hosts: localhost
   gather_facts: false
+
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+    AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_DEFAULT_REGION') }}"
+    AWS_REGION: "{{ lookup('env', 'AWS_REGION') }}"
 
   vars:
     key: "{{ lookup('env', 'BAG_KEY_NAME') }}"
@@ -44,7 +49,7 @@
       iam_type: role
       iam_name: "{{ portal_role_name }}"
       policy_name: PortalPolicy
-      policy_json: "{{ lookup('file', '../../policies/portal.json') }}"
+      policy_json: "{{ lookup('file', 'policies/portal.json') }}"
       skip_duplicates: yes
 
   - name: Create a security group
@@ -192,7 +197,7 @@
 
     - name: Copy the configuration file for httpd (Apache2)
       copy:
-        src: ../../ec2_src/httpd.conf
+        src: portal_src/httpd.conf
         dest: /etc/httpd/conf/httpd.conf
         owner: root
         group: root
@@ -232,14 +237,14 @@
 
     - name: Install AWS's PHP SDK
       unarchive:
-        src: ../../ec2_src/aws.zip
+        src: portal_src/aws.zip
         dest: "{{ base_dir }}/config/aws/"
         owner: apache
         group: apache
 
     - name: Copy the configuration file for the portal
       copy:
-        src: ../../ec2_src/config.php
+        src: portal_src/config.php
         dest: "{{ base_dir }}/config/config.php"
         owner: apache
         group: apache
@@ -247,7 +252,7 @@
 
     - name: Copy the PHP file for the portal
       copy:
-        src: ../../ec2_src/portal.php
+        src: portal_src/portal.php
         dest: "{{ base_dir }}/index.php"
         owner: apache
         group: apache
@@ -255,7 +260,7 @@
 
     - name: Copy the CSS file for the portal
       copy:
-        src: ../../ec2_src/portal.css
+        src: portal_src/portal.css
         dest: "{{ base_dir }}/portal.css"
         owner: apache
         group: apache
@@ -263,7 +268,7 @@
 
     - name: Copy the PHP file for the submission API
       copy:
-        src: ../../ec2_src/submit.php
+        src: portal_src/submit.php
         dest: "{{ base_dir }}/submit.php"
         owner: apache
         group: apache

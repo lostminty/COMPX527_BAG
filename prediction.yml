@@ -2,6 +2,12 @@
   hosts: localhost
   gather_facts: false
 
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+    AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_DEFAULT_REGION') }}"
+    AWS_REGION: "{{ lookup('env', 'AWS_REGION') }}"
+
   vars:
     predict_role_name: Predict
     notify_role_name: Notify
@@ -51,7 +57,7 @@
         iam_type: role
         iam_name: "{{ predict_role_name }}"
         policy_name: PredictPolicy
-        policy_json: "{{ lookup('file', '../../policies/predict.json') }}"
+        policy_json: "{{ lookup('file', 'policies/predict.json') }}"
         skip_duplicates: yes
 
     - name: Apply our inline policy to the notify function's role
@@ -60,7 +66,7 @@
         iam_type: role
         iam_name: "{{ notify_role_name }}"
         policy_name: NotifyPolicy
-        policy_json: "{{ lookup('file', '../../policies/notify.json') }}"
+        policy_json: "{{ lookup('file', 'policies/notify.json') }}"
         skip_duplicates: yes
 
     - name: Create the CloudWatch log groups
@@ -73,8 +79,8 @@
 
     - name: Create the deployment files for the Lambda functions
       archive:
-        path: "../lambda_src/{{ item.name }}.py"
-        dest: "../lambda_src/{{ item.name }}.zip"
+        path: "lambda_src/{{ item.name }}.py"
+        dest: "lambda_src/{{ item.name }}.zip"
         format: zip
         force_archive: yes
       loop:
@@ -85,7 +91,7 @@
       lambda:
         name: "{{ item.name }}"
         state: present
-        zip_file: "../lambda_src/{{ item.zip_file }}"
+        zip_file: "lambda_src/{{ item.zip_file }}"
         runtime: 'python3.9'
         role: "{{ item.role }}"
         handler: "{{ item.name }}.lambda_handler"
@@ -96,6 +102,14 @@
         - name: notify
           zip_file: notify.zip
           role: Notify
+
+    - name: Remove the local deployment files
+      file:
+        path: "lambda_src/{{ item.name }}.zip"
+        state: absent
+      loop:
+        - name: predict
+        - name: notify
 
     - name: Create the main SQS queue
       sqs_queue:
@@ -118,4 +132,3 @@
         state: present
         display_name: "A topic for informing developers."
         purge_subscriptions: no
-    
