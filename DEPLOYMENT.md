@@ -3,9 +3,9 @@ system with Docker installed. First, make sure you have installed the necessary
 collections:
 >$ ansible-galaxy install -r requirements.yml
 
-Then set the following environment variables like below. If you want to use
-a different region, then you will have to modify `portal_src/config.php`
-accordingly.
+Then set the following environment variables similar to something like below.
+If you want to use a different region, then you will have to modify
+`portal_src/config.php` accordingly.
 
 >export AWS_ACCESS_KEY_ID=XXXXXXX
 >
@@ -47,3 +47,8 @@ variable if you wish.
 
 This should deploy the solution. Configure other users and CloudWatch alarms
 as required by your situation.
+
+Once you are finished, the following command offers partial cleanup. See the
+comment at the top of the playbook to see what is not cleaned up by the
+previous deployment playbooks and scripts.
+>ansible-playbook cleanup.yml

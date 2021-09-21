@@ -1,0 +1,137 @@
+# This playbook is only for convenience. It destroys all solution-related
+# infrastructure except for the following:
+#    "CloudWatchAlarm" SNS topic - The subscriptions for this were not automated.
+#    SES - Nothing for this was automated, so you must handle it yourself.
+- name: Destroy deployed solution infrastructure
+  hosts: localhost
+  gather_facts: false
+
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+    AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_DEFAULT_REGION') }}"
+    AWS_REGION: "{{ lookup('env', 'AWS_REGION') }}"
+
+  vars:
+    portal_role_name: PortalServer
+    predict_role_name: PredictionStarter
+    notify_role_name: Notifier
+    predictor_role_name: Predictor
+
+    portal_policy_name: PortalPolicy
+    predict_policy_name: PredictPolicy
+    notify_policy_name: NotifyPolicy
+
+    portal_ids: []
+
+  tasks:
+    - block: 
+      - name: Destroy the ELB
+        ec2_elb_lb:
+          name: BAG
+          tags:
+            Name: BAG
+          state: absent
+          wait: yes
+        ignore_errors: true
+
+      - name: Get a list of all the EC2 instances
+        ec2_instance_info:
+          filters:
+            "tag:Name": portal
+        register: ec2
+        ignore_errors: true
+      
+      - name: Generate array of instance IDs
+        set_fact:
+          portal_ids: "{{ portal_ids }} + [ '{{ item.instance_id }}' ]"
+        with_items: "{{ ec2.instances }}"
+        ignore_errors: true
+
+      - name: Destroy the EC2 instances for the portal
+        ec2:
+          instance_ids: "{{ portal_ids }}"
+          state: absent
+          wait: yes
+        ignore_errors: true
+
+      - name: Destroy the main security group
+        ec2_group:
+          name: firewall
+          state: absent
+        ignore_errors: true
+
+      - name: Destroy the portal's managed policy
+        iam_managed_policy:
+          state: absent
+          policy_name: "{{ portal_policy_name }}"
+        ignore_errors: true
+
+      - name: Destroy the portal role
+        iam_role:
+          name: "{{ portal_role_name }}"
+          purge_policies: true
+          delete_instance_profile: yes
+          state: absent
+        ignore_errors: true
+
+      - name: Destroy all DynamoDB tables
+        dynamodb_table:
+          name: "{{ item.name }}"
+          state: absent
+        loop:
+          - name: users
+          - name: sessions
+        ignore_errors: true
+
+    - block:
+      - name: Destroy the predict function
+        lambda:
+          name: "{{ item.name }}"
+          state: absent
+        loop:
+          - name: predict
+          - name: notify
+          - name: predictor
+        ignore_errors: true
+
+      - name: Destroy the inline policy for the predict role
+        iam_policy:
+          policy_name: "{{ predict_policy_name }}"
+          iam_type: role
+          iam_name: "{{ predict_role_name }}"
+          skip_duplicates: yes
+          state: absent
+        ignore_errors: true
+      
+      - name: Destroy the inline policy for the notify role
+        iam_policy:
+          policy_name: "{{ notify_policy_name }}"
+          iam_type: role
+          iam_name: "{{ notify_role_name }}"
+          skip_duplicates: yes
+          state: absent
+        ignore_errors: true
+
+      - name: Destroy the roles for the prediction functionality
+        iam_role:
+          name: "{{ item.name }}"
+          purge_policies: true
+          delete_instance_profile: yes
+          state: absent
+        loop:
+          - name: "{{ predict_role_name }}"
+          - name: "{{ notify_role_name }}"
+          - name: "{{ predictor_role_name }}"
+        ignore_errors: true
+
+      - name: Destroy the main SQS queue
+        sqs_queue:
+          name: notifications
+          state: absent
+        ignore_errors: true
+
+      - name: Destroy the predictor function image's ECR repository
+        command: aws ecr delete-repository --repository-name predictor --force
+        changed_when: false
+        ignore_errors: true

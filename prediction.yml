@@ -9,9 +9,11 @@
     AWS_REGION: "{{ lookup('env', 'AWS_REGION') }}"
 
   vars:
-    predict_role_name: Predict
-    notify_role_name: Notify
+    predict_role_name: PredictionStarter
+    notify_role_name: Notifier
     predictor_role_name: Predictor
+    predict_policy_name: PredictPolicy
+    notify_policy_name: NotifyPolicy
 
   tasks:
     - name: Create an IAM role for the predict function
@@ -111,9 +113,9 @@
         timeout: 15 # This is in seconds.
       loop:
         - name: predict
-          role: Predict
+          role: "{{ predict_role_name }}"
         - name: notify
-          role: Notify
+          role:  "{{ notify_role_name }}"
 
     - name: Remove the local deployment files
       file:

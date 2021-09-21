@@ -13,17 +13,25 @@
     ami: "ami-0210560cedcb09f07" # Amazon Linux 2
     # vpc: "vpc-xxxxxx" # Don't think this is necessary to explicitly specify.
     portal_role_name: PortalServer
-    portal_instance: "t3a.micro"
-    portal_count: 2
+    portal_policy_name: PortalPolicy
+    portal_instance: 't3.micro' # Must support dedicated tenancy.
+    portal_count_tags: ['0', '1'] # Add any number of tags here.
     portal_ids: []
     zone_names: []
 
   tasks:
+  - name: Create the main policy for the portal role
+    iam_managed_policy:
+      state: present
+      policy_name: "{{ portal_policy_name }}"
+      policy_description: "Main policy for a portal."
+      policy: "{{ lookup('file', 'policies/portal.json') }}"
+
   - name: Create an IAM role to manage EC2 instances
     iam_role:
       name: "{{ portal_role_name }}"
       state: present
-      description: "Manages the web portals."
+      description: "Perform the duty of the portal."
       purge_policies: true
       # Below is a list of all the services ("Principals") from Amazon/AWS that
       # can utilise the permissions of a role:
@@ -38,19 +46,8 @@
             "Action": "sts:AssumeRole"
           }
         }
-
-  - name: Wait for the IAM role to finish creating
-    pause:
-      seconds: 10
-
-  - name: Apply our policy to the portal role
-    iam_policy:
-      state: present
-      iam_type: role
-      iam_name: "{{ portal_role_name }}"
-      policy_name: PortalPolicy
-      policy_json: "{{ lookup('file', 'policies/portal.json') }}"
-      skip_duplicates: yes
+      managed_policies:
+        - "{{ portal_policy_name }}"
 
   - name: Create a security group
     ec2_group:
@@ -73,19 +70,26 @@
     register: firewall
 
   - name: Create the EC2 instances
-    ec2:
+    ec2_instance:
+      state: present
       key_name: "{{ key }}"
-      group_id: "{{ firewall.group_id }}"
       instance_type: "{{ portal_instance }}"
-      instance_profile_name: "{{ portal_role_name }}"
-      image: "{{ ami }}"
+      instance_role: "{{ portal_role_name }}"
+      cpu_credit_specification: unlimited
+      tenancy: dedicated # For extra security.
+      image_id: "{{ ami }}"
       wait: yes
-      monitoring: yes
-      exact_count: "{{ portal_count }}"
-      count_tag:
+      wait_timeout: 50 # Just wait for "running", not full initialisation.
+      detailed_monitoring: yes
+      security_group: "{{ firewall.group_id }}"
+      tags:
          Name: portal
-      instance_tags:
-         Name: portal
+         Count: "{{ item }}"
+      filters:
+        "tag:Name": portal
+        "tag:Count": "{{ item }}"
+        "instance-state-name": running
+    loop: "{{ portal_count_tags }}"
 
   - name: Get a list of all the EC2 instances
     ec2_instance_info:
@@ -274,8 +278,15 @@
         group: apache
         mode: '440'
 
-    - name: Enable and start Apache2
+    - name: Enable Apache2
       service:
         name: httpd
         enabled: yes
-        state: started
+
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Rebooting...
+      reboot:
