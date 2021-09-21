@@ -1,10 +1,13 @@
-from datetime import datetime
 import json
+from datetime import datetime
+
 import boto3
 
+SOURCE_EMAIL = 'compx527brms@gmail.com'
 ses = boto3.client('ses')
 
-def message_template(anomaly, timestamp, identifier):
+
+def message_template(anomaly, timestamp, identifier, confidence):
     date = datetime.fromtimestamp(int(timestamp)).isoformat()
     return {
         'Subject': {
@@ -13,25 +16,23 @@ def message_template(anomaly, timestamp, identifier):
         'Body': {
             'Text': {
                 'Data': f'The anomaly "{anomaly}" was detected at ' +
-                    f'{date} (UTC) with the identifier "{identifier}".'
+                f'{date} (UTC) with the identifier "{identifier}".\n' +
+                f'We are {confidence:.2f}% sure of this anomaly.'
             }
         }
     }
 
+
 def lambda_handler(event, context):
     for record in event['Records']:
         body = json.loads(record['body'])
-        
-        email = body['email']
-        anomaly = body['anomaly']
-        timestamp = body['timestamp']
-        identifier = body['identifier']
-        
+
         try:
             response = ses.send_email(
-                Source='compx527brms@gmail.com',
+                Source=SOURCE_EMAIL,
                 Destination={'ToAddresses': [body['email']]},
-                Message=message_template(anomaly, timestamp, identifier))
+                Message=message_template(body['anomaly'], body['timestamp'],
+                                         body['identifier'], body['confidence']))
         except:
             return {
                 'statusCode': 500

@@ -43,7 +43,7 @@
     pause:
       seconds: 10
 
-  - name: Apply our inline policy to the portal role
+  - name: Apply our policy to the portal role
     iam_policy:
       state: present
       iam_type: role
@@ -177,7 +177,7 @@
   become: true
 
   vars:
-    base_dir: /var/www/portal
+    www_base_dir: /var/www/portal
 
   tasks:
     - name: Enable a PHP version higher than 5
@@ -221,7 +221,7 @@
 
     - name: Create the directory for the portal files
       file:
-        path: "{{ base_dir }}"
+        path: "{{ www_base_dir }}"
         state: directory
         owner: root
         group: root
@@ -230,7 +230,7 @@
     - name: Create the config directory and the directory for AWS's PHP SDK
       file:
         state: directory
-        path: "{{ base_dir }}/config/aws/"
+        path: "{{ www_base_dir }}/config/aws/"
         owner: apache
         group: apache
         mode: '760'
@@ -238,14 +238,14 @@
     - name: Install AWS's PHP SDK
       unarchive:
         src: portal_src/aws.zip
-        dest: "{{ base_dir }}/config/aws/"
+        dest: "{{ www_base_dir }}/config/aws/"
         owner: apache
         group: apache
 
     - name: Copy the configuration file for the portal
       copy:
         src: portal_src/config.php
-        dest: "{{ base_dir }}/config/config.php"
+        dest: "{{ www_base_dir }}/config/config.php"
         owner: apache
         group: apache
         mode: '440'
@@ -253,7 +253,7 @@
     - name: Copy the PHP file for the portal
       copy:
         src: portal_src/portal.php
-        dest: "{{ base_dir }}/index.php"
+        dest: "{{ www_base_dir }}/index.php"
         owner: apache
         group: apache
         mode: '440'
@@ -261,7 +261,7 @@
     - name: Copy the CSS file for the portal
       copy:
         src: portal_src/portal.css
-        dest: "{{ base_dir }}/portal.css"
+        dest: "{{ www_base_dir }}/portal.css"
         owner: apache
         group: apache
         mode: '440'
@@ -269,7 +269,7 @@
     - name: Copy the PHP file for the submission API
       copy:
         src: portal_src/submit.php
-        dest: "{{ base_dir }}/submit.php"
+        dest: "{{ www_base_dir }}/submit.php"
         owner: apache
         group: apache
         mode: '440'

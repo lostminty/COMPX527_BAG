@@ -1,12 +1,11 @@
-First, make sure you have installed the necessary collections:
->ansible-galaxy install -r requirements.yml
+To deploy the solution completely, you will need to do this on a GNU/Linux
+system with Docker installed. First, make sure you have installed the necessary
+collections:
+>$ ansible-galaxy install -r requirements.yml
 
-You may also need to export this as well if a world-writeable
-directory warning appears.
-
->export ANSIBLE_CONFIG=./ansible.cfg
-
-Then set the following environment variables like below:
+Then set the following environment variables like below. If you want to use
+a different region, then you will have to modify `portal_src/config.php`
+accordingly.
 
 >export AWS_ACCESS_KEY_ID=XXXXXXX
 >
@@ -25,11 +24,26 @@ your key pair (which should have 0600 permissions or you will get an error):
 >
 >export BAG_KEY_NAME=my_key_pair_name
 
+Before you deploy, modify `lambda_src/notify.py` and set `SOURCE_EMAIL` to your
+email address that sends the notification. This email address must be verified
+in the AWS SES dashboard first. Note that your account must also not be in
+sandbox mode for it to send emails to users without verifying them beforehand.
+If you are unable to leave sandbox mode, then add your test users' email
+addresses like you did with your source email address in the AWS SES dashboard
+as well.
+
 There are more variables to edit in the two playbooks if you want to customise
 the deployment further.
 
-Finally, run the following deploy the solution:
+Run the following to deploy most of the solution:
+>export ANSIBLE_CONFIG=./ansible.cfg
+>
+>ansible-playbook portal.yml prediction.yml
 
->ansible-playbook portal.yml
+Finally, execute `build_and_push_predictor.sh` in `predictor_src` by first
+changing directory into it. You can manually supply the `AWS_ID` environment
+variable if you wish.
+>cd predictor_src && ./build_and_push_predictor.sh; cd $OLDPWD
 
->ansible-playbook prediction.yml
+This should deploy the solution. Configure other users and CloudWatch alarms
+as required by your situation.

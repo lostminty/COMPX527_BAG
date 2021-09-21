@@ -4,7 +4,7 @@
     {
       "Sid": "Stmt1631614199182",
       "Action": [
-        "cloudwatch:*",
+        "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
         "dynamodb:BatchWriteItem",

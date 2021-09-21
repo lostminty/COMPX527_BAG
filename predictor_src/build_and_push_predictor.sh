@@ -2,10 +2,15 @@
 set -e
 
 name=predictor
+
+if [ -z "$AWS_ID" ]; then
+	AWS_ID=$(aws sts get-caller-identity --query Account --output text)
+fi
+
 url=$AWS_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 # In case this script is called from elsewhere, we must always build relative
-# to where this file is.
+# to where this script is.
 docker build -t $name "$(cd -- "$(dirname "$0")" > /dev/null 2>&1; pwd -P)"
 
 aws ecr get-login-password | docker login \
@@ -22,7 +27,16 @@ docker push "$url/$name:latest"
 
 docker logout $url
 
-aws lambda create-function \
-	--function-name predictor \
-	--package-type Image \
-	--code ImageUri=$url/$name:latest
+if aws lambda list-functions --query 'Functions[*].[FunctionName]' \
+	--output text | grep -q $name
+then
+	aws lambda update-function-code \
+		--function-name $name \
+		--image-uri $url/$name:latest
+else
+	aws lambda create-function \
+		--function-name $name \
+		--role "arn:aws:iam::$AWS_ID:role/${name^}" \
+		--package-type Image \
+		--code ImageUri=$url/$name:latest
+fi

@@ -1,5 +1,6 @@
-from time import time
 import json
+from time import time
+
 import boto3
 
 dynamodb = boto3.resource('dynamodb')
