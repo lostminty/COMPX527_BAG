@@ -73,8 +73,8 @@
 
     - name: Create the deployment files for the Lambda functions
       archive:
-        path: "../predictor_src/{{ item.name }}.py"
-        dest: "../predictor_src/{{ item.name }}.zip"
+        path: "../lambda_src/{{ item.name }}.py"
+        dest: "../lambda_src/{{ item.name }}.zip"
         format: zip
         force_archive: yes
       loop:
@@ -85,7 +85,7 @@
       lambda:
         name: "{{ item.name }}"
         state: present
-        zip_file: "../predictor_src/{{ item.zip_file }}"
+        zip_file: "../lambda_src/{{ item.zip_file }}"
         runtime: 'python3.9'
         role: "{{ item.role }}"
         handler: "{{ item.name }}.lambda_handler"

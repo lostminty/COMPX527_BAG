@@ -131,5 +131,11 @@ dmypy.json
 # pytorch model files
 *.ckpt
 
+# Visual Studio Code
+.vscode/
+
 # The pickle cache is too big to upstream.
-src/pickle_jar/
+predictor_src/pickle_jar/
+
+# Ignore the logs
+predictor_src/logs/
