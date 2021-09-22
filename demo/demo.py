@@ -8,18 +8,17 @@ from pprint import pp
 from urllib import parse, request
 from urllib.error import HTTPError
 
-URL = 'http://BAG-628495447.ap-southeast-2.elb.amazonaws.com/submit'
-
 with open('output.txt', 'r', encoding='UTF-8') as file:
     DATA = file.read()
 
-if len(sys.argv) != 3:
-    print('Usage:', sys.argv[0], '<email address>', '<token>')
+if len(sys.argv) != 4:
+    print('Usage:', sys.argv[0], '<ELB url>', '<email address>', '<token>')
     sys.exit(1)
 
+URL = f'http://{sys.argv[1]}/submit'
 CHECK = {
-    'email': sys.argv[1],
-    'token': sys.argv[2],
+    'email': sys.argv[2],
+    'token': sys.argv[3],
     'identifier': 'Demo',
     'minimum_confidence': 10,
     'data': DATA
