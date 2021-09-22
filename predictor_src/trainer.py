@@ -1,20 +1,21 @@
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from src.litautoencoder import LitAutoEncoder
-from src.dcsass_dataloader import DCSASS
+from litautoencoder import LitAutoEncoder
+from dcsass_dataloader import DCSASS
 
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 
-import src.datasets as datasets
-import src.transforms as tf
-
+import datasets as datasets
+import transforms as tf
+LEN_SAMPLE=10
 CHECKPOINT_FILE = "example.ckpt"
 SEED = 1
 NUM_WORKERS = 8
+DIM_SCALE = [128,128]
 TRANSFORMS = transforms.Compose([
             tf.VideoFilePathToTensor(
                 max_len=LEN_SAMPLE, fps=2, padding_mode='last'),

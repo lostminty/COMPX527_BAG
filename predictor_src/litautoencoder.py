@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+import torch
 from torch import nn
 from torch.optim import Adam
 import torch.nn.functional as F
@@ -7,6 +8,8 @@ from sklearn.metrics import accuracy_score
 
 
 class LitAutoEncoder(pl.LightningModule):
+    
+    
     def __init__(self):
         super().__init__()
         
@@ -20,7 +23,7 @@ class LitAutoEncoder(pl.LightningModule):
 
     def forward(self, x):
         # in lightning, forward defines the prediction/inference actions
-        x,_ = x
+        x,y_true = x
        
         x = x.view(x.size(0), -1)
         embedding = self.encoder(x)
@@ -54,7 +57,7 @@ class LitAutoEncoder(pl.LightningModule):
         y_true = y.cpu().detach().numpy()
         y_pred = y_hat.argmax(axis=1).cpu().detach().numpy()
         # print(type(y_true))
-        y_pred = label_formatter(y_pred[0], 14)
+        y_pred = self.label_formatter(y_pred[0], 14)
         # print(y_pred)
         return {'loss': loss,
                 'y_true': y_true,
@@ -69,5 +72,12 @@ class LitAutoEncoder(pl.LightningModule):
 
         acc = accuracy_score(y_true, y_pred)
         self.log('val_acc', acc)
+        
+        
+    def label_formatter(self,label, num_of_classes):
+        label_encoded = [0] * num_of_classes
+        label_encoded[label] += 1
+        return torch.from_numpy(np.array(label_encoded))
+
 
 

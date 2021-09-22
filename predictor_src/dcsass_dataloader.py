@@ -1,9 +1,9 @@
 from torchvision.datasets import VisionDataset
 from torchvision import transforms
 import re,glob,os,pickle,sys,csv
-
-
-
+import numpy as np
+from sklearn import preprocessing
+import torch
 class DCSASS(VisionDataset):
     def __init__(self, directory, transform, pickled_dirname="pickle_jar"):
         super().__init__(directory)
@@ -70,10 +70,10 @@ class DCSASS(VisionDataset):
             pickle.dump(video, open(pickled, "wb"))
 
         label_index = self.encoder.transform([label])[0]
-        return video, label_formatter(label_index, len(self.unique_labels))
+        return video, self.label_formatter(label_index, len(self.unique_labels))
 
 
-    def label_formatter(label, num_of_classes):
+    def label_formatter(self,label, num_of_classes):
         label_encoded = [0] * num_of_classes
         label_encoded[label] += 1
         return torch.from_numpy(np.array(label_encoded))

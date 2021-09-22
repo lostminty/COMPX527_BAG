@@ -1,11 +1,11 @@
+from predictor import predictor
 
 
 
 
 
-def load():
-   data = []
-   with open ("/src/output.txt", "r") as myfile:
+data = []
+with open ("output.txt", "r") as myfile:
        data=myfile.readlines()
 
-   return data
+print(predictor(data,"model.ckpt"))

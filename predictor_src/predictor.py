@@ -25,12 +25,12 @@ class loader(torch.utils.data.Dataset):
 
 
 def predictor(json_strings, model_path="model.ckpt"):
+    torch.manual_seed(0)
     encoder = LitAutoEncoder()
     encoder.load_from_checkpoint(model_path)
     trainer = pl.Trainer(gpus=None, logger=False)
 
-    if isinstance(json_strings, str):
-        json_strings = [json_strings]
+    
         
     test_dataset = loader(json_strings)
 
@@ -40,12 +40,10 @@ def predictor(json_strings, model_path="model.ckpt"):
     predictions = trainer.predict(encoder, data_loader)
 
     
-    vals = list(map(lambda x: torch.Tensor.tolist(x), predictions))
-    top_vals = [max(x) for x in vals]
-    top_vals_indicies = [val_entry.index(
-            x) for x, val_entry in zip(top_vals, vals)]
-    return_val = [{"label":LABELS[index],"confidence":"{:.2%}".format(top_val[index])} 
-                      for index,top_val in zip(top_vals_indicies,top_vals)]
+    vals = torch.Tensor.tolist(predictions[0])[0]
+    top_val =max(vals)
+    index = vals.index(top_val)
+    return_val = {"label":LABELS[index],"confidence":top_val}
 
     return return_val  # Lambda instance will stringify it for us.
 
