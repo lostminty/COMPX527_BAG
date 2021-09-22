@@ -32,7 +32,7 @@ def predictor(json_strings, model_path="model.ckpt"):
 
     
         
-    test_dataset = loader(json_strings)
+    test_dataset = loader([json_strings])
 
     data_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=1, shuffle=True)
