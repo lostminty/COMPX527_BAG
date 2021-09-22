@@ -56,7 +56,8 @@ class LitAutoEncoder(pl.LightningModule):
         self.log('val_loss', loss, prog_bar=False)
         y_true = y.cpu().detach().numpy()
         y_pred = y_hat.argmax(axis=1).cpu().detach().numpy()
-        # print(type(y_true))
+        print(y_true)
+        print(y_pred)
         y_pred = self.label_formatter(y_pred[0], 14)
         # print(y_pred)
         return {'loss': loss,
