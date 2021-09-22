@@ -1,11 +1,10 @@
 import numpy as np
 import pytorch_lightning as pl
-import torch
+from pytorch_lightning import loggers as pl_loggers
 from litautoencoder import LitAutoEncoder
 from dcsass_dataloader import DCSASS
 
-from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 
@@ -38,13 +37,11 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(sys.argv[0], "<path to \"DCSASS Dataset\" ZIP extraction>")
         sys.exit(1)
-
+    dataset = DCSASS(sys.argv[1],TRANSFORMS)
     torch.manual_seed(SEED)
     tb_logger = pl_loggers.TensorBoardLogger("logs/")
     train, val = dataSplit(dataset,0.8)
-    early_stop_callback = EarlyStopping(
-        monitor="val_acc", min_delta=0.00, patience=3, verbose=False, mode="max")
-
+    early_stop_callback = ModelCheckpoint()
     train_data_loader = torch.utils.data.DataLoader(
         train, batch_size=1, shuffle=True, num_workers=NUM_WORKERS, pin_memory=True)
     val_data_loader = torch.utils.data.DataLoader(
