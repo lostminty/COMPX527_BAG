@@ -3,6 +3,8 @@ from time import time
 
 import boto3
 
+MAX_NOTIFICATIONS = 5
+
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('users')
 sqs = boto3.resource('sqs').get_queue_by_name(QueueName='notifications')
@@ -45,7 +47,19 @@ def lambda_handler(event, context):
         minimum_confidence = 20.0
 
     try:
-        response = table.get_item(Key={'email': email})
+        notify = bool(event['notify'])
+    except ValueError:
+        return {
+            'statusCode': 400,
+            'body': json_message('Notify boolean could not be parsed.')
+        }
+    except:
+        notify = True
+
+    try:
+        response = table.get_item(
+            Key={'email': email},
+            ProjectionExpression='tokens')
         token_present = token in response['Item']['tokens']
     except:
         token_present = False
@@ -85,26 +99,52 @@ def lambda_handler(event, context):
     if anomaly != '-' and confidence >= minimum_confidence:
         timestamped = int(time())
 
-        sqs.send_message(MessageBody=json.dumps({
-            'email': email,
-            'anomaly': anomaly,
-            'timestamp': timestamped,
-            'identifier': identifier,
-            'confidence': confidence
-        }))
+        while True:
+            try:
+                table.update_item(
+                    Key={'email': email},
+                    UpdateExpression=f'REMOVE notifications[{MAX_NOTIFICATIONS - 1}]',
+                    ConditionExpression='size(notifications) >= :m',
+                    ExpressionAttributeValues={':m': MAX_NOTIFICATIONS})
+            except:
+                break
 
-        table.update_item(
-            Key={'email': email},
-            UpdateExpression='SET notifications = list_append(notifications, :n)',
-            ExpressionAttributeValues={
-                ':n': [
-                    {
+        try:
+            table.update_item(
+                Key={'email': email},
+                UpdateExpression='SET notifications = list_append(:n, notifications)',
+                ExpressionAttributeValues={
+                    ':n': [{
                         'identifier': identifier,
                         'timestamp': timestamped,
                         'anomaly': anomaly
-                    }
-                ],
-            })
+                    }]})
+        except:
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'anomaly': anomaly, 'confidence': confidence,
+                    'error': 'Failed to store notification.'
+                })
+            }
+
+        if notify:
+            try:
+                sqs.send_message(MessageBody=json.dumps({
+                    'email': email,
+                    'anomaly': anomaly,
+                    'timestamp': timestamped,
+                    'identifier': identifier,
+                    'confidence': confidence
+                }))
+            except:
+                return {
+                    'statusCode': 500,
+                    'body': json.dumps({
+                        'anomaly': anomaly, 'confidence': confidence,
+                        'error': 'Failed to send notification.'
+                    })
+                }
 
         return {
             'statusCode': 200,

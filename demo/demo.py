@@ -21,6 +21,7 @@ CHECK = {
     'token': sys.argv[3],
     'identifier': 'Demo',
     'minimum_confidence': 10,
+    'notify': 0,
     'data': DATA
 }
 

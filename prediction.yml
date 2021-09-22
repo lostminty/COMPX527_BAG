@@ -142,6 +142,7 @@
         function_name: notify
         event_source: sqs
         source_params:
+          enabled: yes
           batch_size: 1 # This can be set to anything, but 1 will do.
           source_arn: "{{ sqs.queue_arn }}"
 

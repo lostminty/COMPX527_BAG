@@ -39,6 +39,6 @@ else
 		--role "arn:aws:iam::$AWS_ID:role/${name^}" \
 		--package-type Image \
 		--timeout 600 \
-		--memory-size 1024 \
+		--memory-size 2048 \
 		--code ImageUri=$url/$name:latest
 fi

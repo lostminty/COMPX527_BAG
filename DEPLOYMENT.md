@@ -31,13 +31,16 @@ in the AWS SES dashboard first. Note that your account must also not be in
 sandbox mode for it to send emails to users without verifying them beforehand.
 If you are unable to leave sandbox mode, then add your test users' email
 addresses like you did with your source email address in the AWS SES dashboard
-as well.
+as well. The `lambda_src/predict.py` file has a variable called `MAX_NOTIFICATIONS`
+which you can set to a value to keep stored notifications from growing too large.
 
 There are more variables to edit in the two playbooks if you want to customise
 the deployment further, such as dedicated tenancy for the EC2 instances (shared
 by default).
 
-Run the following to deploy most of the solution:
+Run the following to deploy most of the solution. The two playbooks can be
+repeatedly run and in the rare case that something does not work on the initial
+run due to e.g. a timing issue, then run them again.
 >export ANSIBLE_CONFIG=./ansible.cfg
 >
 >ansible-playbook portal.yml prediction.yml
@@ -47,8 +50,8 @@ changing directory into it. You can manually supply the `AWS_ID` environment
 variable if you wish.
 >cd predictor_src && ./build_and_push_predictor.sh; cd $OLDPWD
 
-This should deploy the solution. Configure other users and CloudWatch alarms
-as required by your situation.
+This should deploy the solution. Manually configure other users, their
+permissions, and CloudWatch alarms as required by your situation.
 
 Once you are finished, the following command offers partial cleanup. See the
 comment at the top of the playbook to see what is not cleaned up by the
