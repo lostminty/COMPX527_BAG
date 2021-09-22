@@ -2,6 +2,8 @@
 # infrastructure except for the following:
 #    "CloudWatchAlarm" SNS topic - The subscriptions for this were not automated.
 #    SES - Nothing for this was automated, so you must handle it yourself.
+#    Instances profiles - There may be a few instance profiles left over.
+#    CloudWatch - Events and logs may not be removed automatically.
 - name: Destroy deployed solution infrastructure
   hosts: localhost
   gather_facts: false
@@ -49,9 +51,9 @@
         ignore_errors: true
 
       - name: Destroy the EC2 instances for the portal
-        ec2:
+        ec2_instance:
           instance_ids: "{{ portal_ids }}"
-          state: absent
+          state: terminated
           wait: yes
         ignore_errors: true
 

@@ -4,8 +4,8 @@ collections:
 >$ ansible-galaxy install -r requirements.yml
 
 Then set the following environment variables similar to something like below.
-If you want to use a different region, then you will have to modify
-`portal_src/config.php` accordingly.
+If you want to use a different region to the one specified below, then you will
+have to modify `portal_src/config.php` accordingly.
 
 >export AWS_ACCESS_KEY_ID=XXXXXXX
 >
@@ -15,8 +15,9 @@ If you want to use a different region, then you will have to modify
 >
 >export AWS_REGION=$AWS_DEFAULT_REGION
 
-After the AWS credentials are configured, set the below to
-your key pair (which should have 0600 permissions or you will get an error):
+After the AWS credentials are configured, set the below to your EC2 key pair
+that you have created for deployment purposes, which should have 0600
+permissions or you will get an error:
 
 >chmod 600 /path/to/my/key_pair.pem
 >
@@ -33,7 +34,8 @@ addresses like you did with your source email address in the AWS SES dashboard
 as well.
 
 There are more variables to edit in the two playbooks if you want to customise
-the deployment further.
+the deployment further, such as dedicated tenancy for the EC2 instances (shared
+by default).
 
 Run the following to deploy most of the solution:
 >export ANSIBLE_CONFIG=./ansible.cfg

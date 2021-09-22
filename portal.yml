@@ -9,13 +9,16 @@
     AWS_REGION: "{{ lookup('env', 'AWS_REGION') }}"
 
   vars:
+    # You can configure the below variables if you want more control over deployment.
+    portal_instance: 't3.micro' # Should be compatible with the below.
+    portal_tenancy: default # Can be set to 'dedicated' for extra security.
+    portal_count_tags: ['0', '1', '2'] # Add any number of tags here. 3 instances by default.
+
     key: "{{ lookup('env', 'BAG_KEY_NAME') }}"
-    ami: "ami-0210560cedcb09f07" # Amazon Linux 2
+    ami: "ami-0210560cedcb09f07" # Amazon Linux 2.
     # vpc: "vpc-xxxxxx" # Don't think this is necessary to explicitly specify.
     portal_role_name: PortalServer
     portal_policy_name: PortalPolicy
-    portal_instance: 't3.micro' # Must support dedicated tenancy.
-    portal_count_tags: ['0', '1'] # Add any number of tags here.
     portal_ids: []
     zone_names: []
 
@@ -76,7 +79,7 @@
       instance_type: "{{ portal_instance }}"
       instance_role: "{{ portal_role_name }}"
       cpu_credit_specification: unlimited
-      tenancy: dedicated # For extra security.
+      tenancy: "{{ portal_tenancy }}" 
       image_id: "{{ ami }}"
       wait: yes
       wait_timeout: 50 # Just wait for "running", not full initialisation.

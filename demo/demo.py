@@ -21,6 +21,7 @@ CHECK = {
     'email': sys.argv[1],
     'token': sys.argv[2],
     'identifier': 'Demo',
+    'minimum_confidence': 10,
     'data': DATA
 }
 

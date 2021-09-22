@@ -42,7 +42,7 @@ def lambda_handler(event, context):
             'body': json_message('Minimum confidence value could not be parsed.')
         }
     except:
-        minimum_confidence = 50.0
+        minimum_confidence = 20.0
 
     try:
         response = table.get_item(Key={'email': email})
@@ -72,16 +72,14 @@ def lambda_handler(event, context):
 
     try:
         anomaly = payload['label']
-        # TODO: Need a 0% to 100% likelihood value, not an array of all the
-        # confidences.
         try:
-            confidence = float(payload['confidence'])
+            confidence = float(payload['confidence']) * 100.0
         except:
             confidence = float('inf')
-    except Exception as e:
+    except:
         return {
             'statusCode': 500,
-            'body': json_message(f'Internal prediction result error. {e}')
+            'body': json_message(f'Internal prediction result error.')
         }
 
     if anomaly != '-' and confidence >= minimum_confidence:
@@ -108,7 +106,12 @@ def lambda_handler(event, context):
                 ],
             })
 
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'anomaly': anomaly, 'confidence': confidence})
+        }
+
     return {
         'statusCode': 200,
-        'body': json.dumps({'anomaly': anomaly})
+        'body': json.dumps({'anomaly': '-'})
     }
