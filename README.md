@@ -1,16 +1,26 @@
 # COMPX527_BAG (Behaviour Anomaly Group)
 COMPX527-21B A2:AWS CC App Service to detect suspicious behaviour on submitted CCTV footage
 
+### Sample generation ###
+Samples can be saved to file using predictor_src/create_json_sample.py
 
-Training on:
+this takes 2-3 arguments
+- location of dcsass dataset
+- output file name
+- optional 3rd parameter of the index of the sample to output
+
+This script was used to generate the json string used in the demonstration of calling the API
+
+
+## Training on ##
 - https://www.kaggle.com/mateohervas/dcsass-dataset (requires sign in)
 Has 13 classes and flags indicating a clip is of interest to the class or normal. so, 14 classes. could in theory look at it as 26 classes
 
-No  te:
+### Note:
 for downloading the Dataset, the zip comes with a duplicate of the dataset.
 
 
-Based on:
+### Based on:
 - https://github.com/PyTorchLightning/pytorch-lightning
 (pytorch helper module, automates a lot of 'boilerplate code'. Has some capacity to make code more portable: TODO!)
 - https://github.com/YuxinZhaozyx/pytorch-VideoDataset 
@@ -19,12 +29,7 @@ Based on:
 most of what is in the [my_prog.py](my_prog.py) is from the README.md
 
 
-# TODO
-- portability
-
-
-
-Some dependencies
+### Some dependencies
 
 - pytorch https://pytorch.org/ (will give you a conda command to run if you select appropriate for you system)
 - pytorch lightning https://github.com/PyTorchLightning/pytorch-lightning
@@ -60,6 +65,7 @@ conda env create --file ./envs/video.yml
 python my_prog.py /path/to/dcsass/videos/
 ```
 ### Use - Generic ###
+from predictor_src/scr.py
 
 ```python
 import predict
